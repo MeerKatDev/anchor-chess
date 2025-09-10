@@ -9,6 +9,8 @@ use anchor_lang::prelude::*;
 
 use std::convert::TryFrom;
 
+pub mod game_logic;
+
 declare_id!("31xiptEVG9npfKRzuToPsBGwrBs6tSw5bRj6VhSnMgWH");
 
 #[program]
@@ -37,44 +39,60 @@ pub mod anchor_chess {
         Ok(())
     }
 
-    /// move piece
-    //
     pub fn move_piece(ctx: Context<Move>, piece_idx: u8, destination: u8) -> Result<()> {
+        // --- Bounds check ---
         require!(piece_idx < 64 && destination < 64, ChessError::OutOfBounds);
 
         let board = &mut ctx.accounts.board;
-
         let player_key = ctx.accounts.player.key();
 
+        // --- Ensure both players are present ---
+        require!(board.guest.is_some(), ChessError::GuestPlayerNotPresent);
+
+        // --- Validate that the correct player is moving ---
         let valid_player = if board.is_white_turn {
             player_key == board.maker
         } else {
             Some(player_key) == board.guest
         };
-
         require!(valid_player, ChessError::InvalidPlayer);
 
-        // Check that destination be different than the origin
+        // --- Validate that the piece belongs to the player ---
+        let is_moving_white = board.is_white_turn;
+        require!(
+            (is_moving_white && piece_idx < 16) || (!is_moving_white && piece_idx >= 16),
+            ChessError::InvalidPlayer
+        );
+
+        // --- Ensure destination is different ---
         require!(
             board.state[piece_idx as usize] != destination,
             ChessError::InvalidMove
         );
-        require!(board.guest.is_some(), ChessError::GuestPlayerNotPresent);
 
-        // proper color with proper piece idx
-        require!(
-            (board.is_white_turn && piece_idx < 16) || (!board.is_white_turn && piece_idx > 15),
-            ChessError::InvalidPlayer
-        );
+        // --- Validate move legality ---
+        require!(board.is_move_legal(piece_idx, destination)?, ChessError::InvalidMove);
 
-        board.is_move_legal(piece_idx, destination)?;
+        // --- Capture any opposite color piece at the destination ---
+        let mut target_range = if is_moving_white { 16..32 } else { 0..16 };
+        if let Some(capture_idx) = target_range
+            .find(|&idx| board.state[idx] == destination)
+        {
+            board.state[capture_idx] = 0; // captured
+        }
 
+        // --- Move the piece ---
         board.state[piece_idx as usize] = destination;
 
+        // --- Swap turn ---
         board.is_white_turn = !board.is_white_turn;
+
+        // TODO: count points, update game state, emit events, etc.
 
         Ok(())
     }
+
+
     /// resign - end the game earlier
     pub fn resign(ctx: Context<Resign>) -> Result<()> {
         ctx.accounts.board.resign(ctx.accounts.maker.key())?;
@@ -196,18 +214,22 @@ impl Board {
     }
 
     pub fn is_move_legal(&self, piece_idx: u8, destination: u8) -> Result<bool> {
-        let piece = PieceType::try_from(piece_idx)?; // may return Err(ChessError)
+        let piece = PieceType::try_from(piece_idx)?;
         let current_pos = self.state[piece_idx as usize];
 
-        // Dumb check: just return true if destination is different
-        // and also pattern-match on piece so it’s “used”
+        if destination == current_pos {
+            return Err(ChessError::InvalidMove.into());
+        }
+
+        let is_white = piece_idx < 16; // white = first 16 pieces
+
         let legal = match piece {
-            PieceType::Pawn => destination != current_pos,
-            PieceType::Rook => destination != current_pos,
-            PieceType::Knight => destination != current_pos,
-            PieceType::Bishop => destination != current_pos,
-            PieceType::Queen => destination != current_pos,
-            PieceType::King => destination != current_pos,
+            PieceType::Pawn => game_logic::is_pawn_move(current_pos, destination, is_white),
+            PieceType::Rook => game_logic::is_rook_move(current_pos, destination),
+            PieceType::Knight => game_logic::is_knight_move(current_pos, destination),
+            PieceType::Bishop => game_logic::is_bishop_move(current_pos, destination),
+            PieceType::Queen => game_logic::is_queen_move(current_pos, destination),
+            PieceType::King => game_logic::is_king_move(current_pos, destination),
         };
 
         Ok(legal)
