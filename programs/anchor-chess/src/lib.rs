@@ -22,7 +22,7 @@ pub mod anchor_chess {
 
     /// Initializes chess board on-chain
     /// Maker has always white pieces
-    pub fn initialize(ctx: Context<Initialize>, guest: Option<Pubkey>, seed: u64) -> Result<()> {
+    pub fn initialize(ctx: Context<Initialize>, seed: u64, guest: Option<Pubkey>) -> Result<()> {
         let board = Board::new(ctx.bumps.board, seed, guest, ctx.accounts.maker.key());
 
         ctx.accounts.board.set_inner(board);

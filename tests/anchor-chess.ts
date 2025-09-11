@@ -5,10 +5,11 @@ import BN from "bn.js";
 
 describe("anchor-chess", () => {
   // Configure the client to use the local cluster.
-  anchor.setProvider(anchor.AnchorProvider.env());
+  const provider = anchor.AnchorProvider.env();
+  anchor.setProvider(provider);
 
   const program = anchor.workspace.anchorChess as Program<AnchorChess>;
-  const maker = (program.provider as anchor.AnchorProvider).wallet.publicKey;
+  let maker = provider.wallet as anchor.Wallet;
 
   it("Is initialized!", async () => {
   
@@ -18,20 +19,21 @@ describe("anchor-chess", () => {
     const [boardPda] = anchor.web3.PublicKey.findProgramAddressSync(
       [
         Buffer.from("board"),
-        maker.toBuffer(),
-        seed.toArrayLike(Buffer, "le", 8), // u64 little-endian
+        maker.publicKey.toBuffer(),
+        seed.toArrayLike(Buffer, "le", 8) // u64 little-endian
       ],
       program.programId
     );
     
     const tx = await program.methods
-      .initialize(null, seed)
+      .initialize(seed, null)
       .accounts({
-        maker,
+        maker: maker.publicKey,
         board: boardPda,
         systemProgram: anchor.web3.SystemProgram.programId,
       })
       .rpc();
+
     console.log("Your transaction signature", tx);
   });
 });
