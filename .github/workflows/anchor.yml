@@ -37,6 +37,18 @@ jobs:
           toolchain: stable
           profile: minimal
 
+      # Cache cargo binaries (avm, anchor)
+      - name: Cache cargo binaries, registry, and target
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/bin
+            ~/.cargo/git
+            target
+          key: cargo-${{ runner.os }}-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: cargo-
+          
       # Solana CLI cache
       - name: Cache Solana CLI
         uses: actions/cache@v3
@@ -48,9 +60,9 @@ jobs:
       # Install Solana CLI if missing
       - name: Install Solana
         run: |
+          export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
           if ! command -v solana >/dev/null; then
             sh -c "$(curl -sSfL https://release.anza.xyz/stable/install)"
-            export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
             echo "/home/runner/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
           fi
           solana --version
