@@ -1,5 +1,5 @@
-use anchor_lang::prelude::*;
 use crate::ChessError;
+use anchor_lang::prelude::*;
 
 #[derive(InitSpace)]
 #[account(discriminator = 1)]

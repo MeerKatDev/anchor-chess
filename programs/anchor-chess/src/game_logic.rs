@@ -85,9 +85,8 @@ fn is_pawn_move(current: u8, destination: u8, is_white: bool) -> bool {
     }
 
     // Move forward two from starting rank
-    if cx == dx && dy - cy == 2 * dir 
-        && ((is_white && cy == 1) || (!is_white && cy == 6)) {
-            return true;
+    if cx == dx && dy - cy == 2 * dir && ((is_white && cy == 1) || (!is_white && cy == 6)) {
+        return true;
     }
 
     // Capture diagonally
