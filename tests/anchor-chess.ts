@@ -15,12 +15,11 @@ describe("anchor-chess", () => {
   
     const seed = new BN(12345);
 
-    // Derive PDA the same way as in #[account(...)]
     const [boardPda] = anchor.web3.PublicKey.findProgramAddressSync(
       [
         Buffer.from("board"),
         maker.publicKey.toBuffer(),
-        seed.toArrayLike(Buffer, "le", 8) // u64 little-endian
+        seed.toArrayLike(Buffer, "le", 8) 
       ],
       program.programId
     );
