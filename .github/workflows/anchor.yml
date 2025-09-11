@@ -86,4 +86,4 @@ jobs:
 
       # Run Anchor tests
       - name: Run Anchor Tests
-        run: anchor test --skip-deploy
+        run: anchor test
