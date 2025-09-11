@@ -20,11 +20,11 @@ pub fn is_move_legal(
 
     let legal = match piece {
         PieceType::Pawn => is_pawn_move(current_pos, destination, is_white, board_state),
-        PieceType::Rook => is_rook_move(current_pos, destination),
+        PieceType::Rook => is_rook_move(current_pos, destination, is_white, board_state),
         PieceType::Knight => is_knight_move(current_pos, destination, is_white, board_state),
-        PieceType::Bishop => is_bishop_move(current_pos, destination),
-        PieceType::Queen => is_queen_move(current_pos, destination),
-        PieceType::King => is_king_move(current_pos, destination),
+        PieceType::Bishop => is_bishop_move(current_pos, destination, is_white, board_state),
+        PieceType::Queen => is_queen_move(current_pos, destination, is_white, board_state),
+        PieceType::King => is_king_move(current_pos, destination, is_white, board_state),
     };
 
     Ok(legal)
@@ -112,11 +112,43 @@ fn is_pawn_move(current: u8, destination: u8, is_white: bool, board_state: &[u8;
     false
 }
 
-fn is_rook_move(current: u8, destination: u8) -> bool {
+fn is_rook_move(current: u8, destination: u8, is_white: bool, board_state: &[u8; 32]) -> bool {
     let (cx, cy) = to_coords(current);
     let (dx, dy) = to_coords(destination);
 
-    cx == dx || cy == dy
+    // Must be same file or same rank
+    if cx != dx && cy != dy {
+        return false;
+    }
+
+    // Determine step direction
+    let (step_x, step_y) = ((dx - cx).signum(), (dy - cy).signum());
+
+    // Walk through path
+    let mut x = cx;
+    let mut y = cy;
+
+    while (x, y) != (dx, dy) {
+        x += step_x;
+        y += step_y;
+        let square = (y * 8 + x) as u8;
+
+        if (x, y) == (dx, dy) {
+            // Destination square: check if occupied by friendly
+            let friendly_range = if is_white { 0..16 } else { 16..32 };
+            if friendly_range.clone().any(|i| board_state[i] == square) {
+                return false; // cannot capture friendly
+            }
+            return true; // empty or enemy piece is fine
+        }
+
+        // Intermediate squares: must be empty
+        if board_state.contains(&square) {
+            return false;
+        }
+    }
+
+    false
 }
 
 fn is_knight_move(current: u8, destination: u8, is_white: bool, board_state: &[u8; 32]) -> bool {
@@ -140,22 +172,67 @@ fn is_knight_move(current: u8, destination: u8, is_white: bool, board_state: &[u
     true
 }
 
-fn is_bishop_move(current: u8, destination: u8) -> bool {
+fn is_bishop_move(current: u8, destination: u8, is_white: bool, board_state: &[u8; 32]) -> bool {
     let (cx, cy) = to_coords(current);
     let (dx, dy) = to_coords(destination);
 
-    (dx - cx).abs() == (dy - cy).abs()
+    // Must be diagonal
+    if (dx - cx).abs() != (dy - cy).abs() {
+        return false;
+    }
+
+    // Step direction
+    let step_x = (dx - cx).signum();
+    let step_y = (dy - cy).signum();
+
+    // Walk along path
+    let mut x = cx;
+    let mut y = cy;
+
+    while (x, y) != (dx, dy) {
+        x += step_x;
+        y += step_y;
+        let square = (y * 8 + x) as u8;
+
+        if (x, y) == (dx, dy) {
+            // Destination: cannot land on friendly
+            let friendly_range = if is_white { 0..16 } else { 16..32 };
+            if friendly_range.clone().any(|i| board_state[i] == square) {
+                return false;
+            }
+            return true; // empty or enemy piece
+        }
+
+        // Intermediate squares must be empty
+        if board_state.contains(&square) {
+            return false;
+        }
+    }
+
+    false
 }
 
-fn is_queen_move(current: u8, destination: u8) -> bool {
-    is_rook_move(current, destination) || is_bishop_move(current, destination)
+fn is_queen_move(current: u8, destination: u8, is_white: bool, board_state: &[u8; 32]) -> bool {
+    is_rook_move(current, destination, is_white, board_state)
+        || is_bishop_move(current, destination, is_white, board_state)
 }
 
-fn is_king_move(current: u8, destination: u8) -> bool {
+fn is_king_move(current: u8, destination: u8, is_white: bool, board_state: &[u8; 32]) -> bool {
     let (cx, cy) = to_coords(current);
     let (dx, dy) = to_coords(destination);
 
-    (dx - cx).abs() <= 1 && (dy - cy).abs() <= 1
+    // Must move at most one square in any direction
+    if (dx - cx).abs() > 1 || (dy - cy).abs() > 1 {
+        return false;
+    }
+
+    // Cannot land on a friendly piece
+    let mut friendly_range = if is_white { 0..16 } else { 16..32 };
+    if friendly_range.any(|i| board_state[i] == destination) {
+        return false;
+    }
+
+    true
 }
 
 fn to_coords(pos: u8) -> (i8, i8) {
@@ -297,10 +374,32 @@ mod tests {
 
     #[test]
     fn test_rook_moves() {
-        // Rook at (0,0) = square 0
-        assert!(is_rook_move(0, 7)); // same row
-        assert!(is_rook_move(0, 56)); // same column
-        assert!(!is_rook_move(0, 9)); // diagonal
+        let mut board: [u8; 32] = [0; 32];
+
+        // Place white rook (piece idx 0) at a1 (square 1)
+        board[0] = 1;
+
+        // Valid rook moves
+        assert!(is_rook_move(1, 9, true, &board)); // a1 -> a2 (vertical)
+        assert!(is_rook_move(1, 57, true, &board)); // a1 -> a8 (vertical)
+        assert!(is_rook_move(1, 7, true, &board)); // a1 -> h1 (horizontal)
+
+        // Invalid diagonal
+        assert!(!is_rook_move(1, 10, true, &board)); // a1 -> b2
+
+        // Blocked by friendly pawn at a2
+        board[8] = 8; // white pawn (piece idx 8) at square 8 (a2)
+        assert!(!is_rook_move(1, 16, true, &board)); // a1 -> a3 (blocked)
+        board[8] = 0; // clear
+
+        // Capture enemy pawn at h1
+        board[16] = 7; // black pawn (piece idx 16) at square 7 (h1)
+        assert!(is_rook_move(1, 7, true, &board)); // capture allowed
+        board[16] = 0; // clear
+
+        // Cannot land on friendly piece at h1
+        board[9] = 7; // white pawn (piece idx 9) at square 7 (h1)
+        assert!(!is_rook_move(1, 7, true, &board));
     }
 
     #[test]
@@ -355,57 +454,125 @@ mod tests {
 
     #[test]
     fn test_bishop_moves() {
-        // Bishop at (2,0) = square 2
-        assert!(is_bishop_move(2, 9)); // diagonal
-        assert!(is_bishop_move(2, 16)); // diagonal further
-        assert!(!is_bishop_move(2, 3)); // horizontal
+        // Setup board: 0 = captured/empty, other positions = piece positions
+        let mut board: [u8; 32] = [0; 32];
+        let is_white = true;
+
+        // Place a white bishop at c1 (square 3)
+        board[2] = 3; // index 2 = bishop piece ID, value = position 3
+
+        // Place a friendly piece at e3 (square 17) blocking diagonal
+        board[3] = 17;
+
+        // Place an enemy piece at a3 (square 11) for capture
+        board[16] = 12;
+
+        // Bishop moves diagonally to an empty square
+        assert!(is_bishop_move(3, 10, is_white, &board)); // c1 -> b2
+
+        // Bishop blocked by friendly at e3
+        assert!(!is_bishop_move(3, 17, is_white, &board)); // c1 -> e3 blocked
+
+        // Bishop captures enemy at a3
+        assert!(is_bishop_move(3, 12, is_white, &board)); // c1 -> a3 capture
+
+        // Bishop cannot move horizontally or vertically
+        assert!(!is_bishop_move(3, 4, is_white, &board)); // c1 -> d1 invalid
+        assert!(!is_bishop_move(3, 19, is_white, &board)); // c1 -> c3 invalid
+
+        // Bishop cannot stay in place
+        assert!(!is_bishop_move(3, 3, is_white, &board)); // same square
     }
 
     #[test]
     fn test_queen_moves() {
-        // --- Horizontal: d1 → h1 (3 → 7) ---
-        //
-        // 1 | . . . Q . . . X
-        //     a b c d e f g h
-        assert!(is_queen_move(3, 7)); // horizontal to h1
+        let mut board: [u8; 32] = [0; 32];
+        let is_white = true;
 
-        // --- Vertical: d1 → d2 (3 → 11) ---
-        //
-        // 2 | . . . X .
+        // Place the white queen at d1 (square 4)
+        board[3] = 4;
+
+        // --- Horizontal capture ---
+        // 1 | . . . Q . . B X
+        //     a b c d e f g h
+        board[16] = 6; // black piece at f1
+        assert!(is_queen_move(4, 6, is_white, &board)); // can capture black
+        assert!(!is_queen_move(4, 7, is_white, &board)); // cannot jump past
+
+        // Reset board
+        board[16] = 0;
+
+        // --- Vertical obstacle ---
+        // 2 | . . . W .
         // 1 | . . . Q .
         //     a b c d e
-        assert!(is_queen_move(3, 11)); // vertical to d2
+        board[0] = 12; // white piece at d2
+        assert!(!is_queen_move(4, 12, is_white, &board)); // blocked by friendly
 
-        // --- Diagonal: d1 → c2 (3 → 10) ---
-        //
-        // 2 | . . X .
-        // 1 | . . . Q
-        //     a b c d
-        assert!(is_queen_move(3, 10)); // diagonal to c2
+        // Reset board
+        board[0] = 0;
 
-        // --- Diagonal: d1 → b3 (3 → 17) ---
-        //
-        // 3 | . X . .
+        // --- Diagonal capture ---
+        // 3 | . B . .
         // 2 | . . . .
         // 1 | . . . Q
         //     a b c d
-        assert!(is_queen_move(3, 17)); // diagonal to b3
+        board[17] = 18; // black piece at b3
+        assert!(is_queen_move(4, 18, is_white, &board)); // can capture
+        assert!(!is_queen_move(4, 25, is_white, &board)); // cannot jump past
 
-        // --- Invalid: d1 → c3 (3 → 18) ---
-        //
-        // 3 | . . X .
-        // 2 | . . . .
+        // --- Diagonal friendly obstacle ---
+        // 2 | . . W .
         // 1 | . . . Q
         //     a b c d
-        assert!(!is_queen_move(3, 18)); // invalid: not straight or diagonal
+        board[1] = 11; // white piece at c2
+        assert!(!is_queen_move(4, 18, is_white, &board)); // blocked by friendly
     }
 
     #[test]
     fn test_king_moves() {
-        assert!(is_king_move(4, 5)); // right
-        assert!(is_king_move(4, 12)); // up
-        assert!(is_king_move(4, 13)); // diagonal
-        assert!(!is_king_move(4, 20)); // too far
+        let mut board: [u8; 32] = [0; 32];
+        let is_white = true;
+
+        // Place white king at e1 (square 5)
+        board[4] = 5;
+
+        // --- Right move ---
+        // 1 | . . . . K X . .
+        //     a b c d e f g h
+        assert!(is_king_move(5, 6, is_white, &board)); // move to f1
+
+        // --- Up move ---
+        // 2 | . . . . X . . .
+        // 1 | . . . . K . . .
+        //     a b c d e f g h
+        assert!(is_king_move(5, 13, is_white, &board)); // move to e2
+
+        // --- Diagonal move ---
+        // 2 | . . . . . X . .
+        // 1 | . . . . K . . .
+        //     a b c d e f g h
+        assert!(is_king_move(5, 14, is_white, &board)); // move to f2
+
+        // --- Too far ---
+        // 3 | . . . . X .
+        // 2 | . . . . . .
+        // 1 | . . . . K .
+        //   | a b c d e f
+        assert!(!is_king_move(5, 21, is_white, &board)); // move to e3 (too far)
+
+        // --- Friendly piece blocking ---
+        // 2 | . . . . w .
+        // 1 | . . . . K .
+        //   | a b c d e f
+        board[0] = 13; // white piece at e2
+        assert!(!is_king_move(5, 13, is_white, &board)); // blocked by friendly
+        // remove from board
+        board[0] = 0;
+
+        // --- Capture enemy piece ---
+        board[16] = 13; // black piece at e2
+        assert!(is_king_move(5, 13, is_white, &board)); // can capture
     }
 
     #[test]
