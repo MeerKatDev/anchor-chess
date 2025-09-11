@@ -12,7 +12,7 @@ pub enum ChessError {
     GuestPlayerNotPresent,
     #[msg("Out of board bounds")]
     OutOfBounds,
-    #[msg("Destination is occupied")]
+    #[msg("Destination is occupied.")]
     BusyDestination,
     #[msg("Wrong piece")]
     InvalidPiece,
