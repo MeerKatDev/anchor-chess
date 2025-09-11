@@ -2,9 +2,10 @@ import * as anchor from "@coral-xyz/anchor";
 import { Program } from "@coral-xyz/anchor";
 import { AnchorChess } from "../target/types/anchor_chess";
 import { Keypair, PublicKey, SystemProgram } from "@solana/web3.js";
+import { assert } from "chai";
 import BN from "bn.js";
 
-describe("Chess game lifetime example", () => {
+describe("Minimal chess game example", () => {
   const provider = anchor.AnchorProvider.env();
   anchor.setProvider(provider);
 
@@ -35,13 +36,13 @@ describe("Chess game lifetime example", () => {
         board: boardPda,
         systemProgram: SystemProgram.programId,
       })
-      .rpc();
+      .rpc({ commitment: "confirmed" });
 
     console.log("Initialize tx:", tx);
 
     const board = await program.account.board.fetch(boardPda);
     console.log("Board guest:", board.guest?.toBase58());
-    console.log("Is white turn:", board.isWhiteTurn);
+    assert.equal(board.isWhiteTurn, true, "Board should start with white's turn");
   });
 
   it("Guest joins the board", async () => {
@@ -51,7 +52,7 @@ describe("Chess game lifetime example", () => {
         maker: maker.publicKey,
         board: boardPda,
       })
-      .rpc();
+      .rpc({ commitment: "confirmed" });
 
     console.log("Join tx:", tx);
 
@@ -78,13 +79,13 @@ describe("Chess game lifetime example", () => {
         player: maker.publicKey,
         board: boardPda,
       })
-      .rpc();
+      .rpc({ commitment: "confirmed" });
 
     console.log("Move piece tx:", tx);
 
     const board = await program.account.board.fetch(boardPda);
-    console.log("Piece new position:", board.state[pieceIdx]);
-    console.log("Is white turn:", board.isWhiteTurn);
+    assert.equal(destination, board.state[pieceIdx], "New position should be fetched!");
+    assert.equal(board.isWhiteTurn, false, "Board should start with white's turn and then change");
   });
 
   it("Resigns the game", async () => {
@@ -94,7 +95,7 @@ describe("Chess game lifetime example", () => {
         maker: maker.publicKey,
         board: boardPda,
       })
-      .rpc();
+      .rpc({ commitment: "confirmed" });
 
     console.log("Resign tx:", tx);
   });
@@ -107,7 +108,7 @@ describe("Chess game lifetime example", () => {
         maker: maker.publicKey,
         board: boardPda,
       })
-      .rpc();
+      .rpc({ commitment: "confirmed" });
 
     console.log("Close board tx:", tx);
 
