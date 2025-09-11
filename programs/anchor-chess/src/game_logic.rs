@@ -1,4 +1,79 @@
-pub fn is_pawn_move(current: u8, destination: u8, is_white: bool) -> bool {
+/// Contains game logic for chess
+/// It shouldn't be dependent on Anchor stuff
+/// It should be a drop in replacement to any Rust program.
+use crate::ChessError;
+use std::convert::TryFrom;
+
+pub fn is_move_legal(current_pos: u8, piece_idx: u8, destination: u8) -> Result<bool, ChessError> {
+    let piece = PieceType::try_from(piece_idx)?;
+
+    if destination == current_pos {
+        return Err(ChessError::InvalidMove);
+    }
+
+    let is_white = piece_idx < 16; // white = first 16 pieces
+
+    let legal = match piece {
+        PieceType::Pawn => is_pawn_move(current_pos, destination, is_white),
+        PieceType::Rook => is_rook_move(current_pos, destination),
+        PieceType::Knight => is_knight_move(current_pos, destination),
+        PieceType::Bishop => is_bishop_move(current_pos, destination),
+        PieceType::Queen => is_queen_move(current_pos, destination),
+        PieceType::King => is_king_move(current_pos, destination),
+    };
+
+    Ok(legal)
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum PieceType {
+    Rook,
+    Knight,
+    Bishop,
+    Queen,
+    King,
+    Pawn,
+}
+
+impl TryFrom<u8> for PieceType {
+    type Error = ChessError;
+
+    fn try_from(value: u8) -> Result<Self, Self::Error> {
+        match value {
+            // Rooks
+            1 | 8 | 25 | 32 => Ok(PieceType::Rook),
+            // Knights
+            2 | 7 | 26 | 31 => Ok(PieceType::Knight),
+            // Bishops
+            3 | 6 | 27 | 30 => Ok(PieceType::Bishop),
+            // Queens
+            4 | 28 => Ok(PieceType::Queen),
+            // Kings
+            5 | 29 => Ok(PieceType::King),
+            // Pawns
+            9..=24 => Ok(PieceType::Pawn),
+            //
+            _ => Err(ChessError::InvalidPiece),
+        }
+    }
+}
+
+impl PieceType {
+    /// Returns all 1-based indices for this piece type
+    #[allow(dead_code)]
+    pub fn indices(&self) -> Vec<u8> {
+        match self {
+            PieceType::Rook => vec![1, 8, 25, 32],
+            PieceType::Knight => vec![2, 7, 26, 31],
+            PieceType::Bishop => vec![3, 6, 27, 30],
+            PieceType::Queen => vec![4, 28],
+            PieceType::King => vec![5, 29],
+            PieceType::Pawn => (9..=16).chain(17..=24).collect(),
+        }
+    }
+}
+
+fn is_pawn_move(current: u8, destination: u8, is_white: bool) -> bool {
     let (cx, cy) = to_coords(current);
     let (dx, dy) = to_coords(destination);
 
@@ -10,10 +85,9 @@ pub fn is_pawn_move(current: u8, destination: u8, is_white: bool) -> bool {
     }
 
     // Move forward two from starting rank
-    if cx == dx && dy - cy == 2 * dir {
-        if (is_white && cy == 1) || (!is_white && cy == 6) {
+    if cx == dx && dy - cy == 2 * dir 
+        && ((is_white && cy == 1) || (!is_white && cy == 6)) {
             return true;
-        }
     }
 
     // Capture diagonally
@@ -24,14 +98,14 @@ pub fn is_pawn_move(current: u8, destination: u8, is_white: bool) -> bool {
     false
 }
 
-pub fn is_rook_move(current: u8, destination: u8) -> bool {
+fn is_rook_move(current: u8, destination: u8) -> bool {
     let (cx, cy) = to_coords(current);
     let (dx, dy) = to_coords(destination);
 
     cx == dx || cy == dy
 }
 
-pub fn is_knight_move(current: u8, destination: u8) -> bool {
+fn is_knight_move(current: u8, destination: u8) -> bool {
     let (cx, cy) = to_coords(current);
     let (dx, dy) = to_coords(destination);
 
@@ -41,18 +115,18 @@ pub fn is_knight_move(current: u8, destination: u8) -> bool {
     (dx == 1 && dy == 2) || (dx == 2 && dy == 1)
 }
 
-pub fn is_bishop_move(current: u8, destination: u8) -> bool {
+fn is_bishop_move(current: u8, destination: u8) -> bool {
     let (cx, cy) = to_coords(current);
     let (dx, dy) = to_coords(destination);
 
     (dx - cx).abs() == (dy - cy).abs()
 }
 
-pub fn is_queen_move(current: u8, destination: u8) -> bool {
+fn is_queen_move(current: u8, destination: u8) -> bool {
     is_rook_move(current, destination) || is_bishop_move(current, destination)
 }
 
-pub fn is_king_move(current: u8, destination: u8) -> bool {
+fn is_king_move(current: u8, destination: u8) -> bool {
     let (cx, cy) = to_coords(current);
     let (dx, dy) = to_coords(destination);
 
@@ -74,8 +148,8 @@ mod tests {
         assert!(is_pawn_move(8, 24, true)); // double step from start
         assert!(!is_pawn_move(8, 32, true)); // too far
         assert!(is_pawn_move(8, 17, true)); // capture diagonal right
-        // fails
-        // assert!(is_pawn_move(8, 15, true)); // capture diagonal left
+                                            // fails
+                                            // assert!(is_pawn_move(8, 15, true)); // capture diagonal left
 
         // a2 cannot capture "left" (off-board)
         assert!(!is_pawn_move(8, 15, true)); // 15 is h2, not a valid left-capture from a2
@@ -125,44 +199,44 @@ mod tests {
         assert!(!is_bishop_move(2, 3)); // horizontal
     }
 
-	#[test]
-	fn test_queen_moves() {
-	    // --- Horizontal: d1 → h1 (3 → 7) ---
-	    //
-	    // 1 | . . . Q . . . X
-	    //     a b c d e f g h
-	    assert!(is_queen_move(3, 7));   // horizontal to h1
+    #[test]
+    fn test_queen_moves() {
+        // --- Horizontal: d1 → h1 (3 → 7) ---
+        //
+        // 1 | . . . Q . . . X
+        //     a b c d e f g h
+        assert!(is_queen_move(3, 7)); // horizontal to h1
 
-	    // --- Vertical: d1 → d2 (3 → 11) ---
-	    //
-	    // 2 | . . . X .
-	    // 1 | . . . Q .
-	    //     a b c d e
-	    assert!(is_queen_move(3, 11));  // vertical to d2
+        // --- Vertical: d1 → d2 (3 → 11) ---
+        //
+        // 2 | . . . X .
+        // 1 | . . . Q .
+        //     a b c d e
+        assert!(is_queen_move(3, 11)); // vertical to d2
 
-	    // --- Diagonal: d1 → c2 (3 → 10) ---
-	    //
-	    // 2 | . . X .
-	    // 1 | . . . Q
-	    //     a b c d
-	    assert!(is_queen_move(3, 10));  // diagonal to c2
+        // --- Diagonal: d1 → c2 (3 → 10) ---
+        //
+        // 2 | . . X .
+        // 1 | . . . Q
+        //     a b c d
+        assert!(is_queen_move(3, 10)); // diagonal to c2
 
-	    // --- Diagonal: d1 → b3 (3 → 17) ---
-	    //
-	    // 3 | . X . .
-	    // 2 | . . . .
-	    // 1 | . . . Q
-	    //     a b c d
-	    assert!(is_queen_move(3, 17));  // diagonal to b3
+        // --- Diagonal: d1 → b3 (3 → 17) ---
+        //
+        // 3 | . X . .
+        // 2 | . . . .
+        // 1 | . . . Q
+        //     a b c d
+        assert!(is_queen_move(3, 17)); // diagonal to b3
 
-	    // --- Invalid: d1 → c3 (3 → 18) ---
-	    //
-	    // 3 | . . X .
-	    // 2 | . . . .
-	    // 1 | . . . Q
-	    //     a b c d
-	    assert!(!is_queen_move(3, 18)); // invalid: not straight or diagonal
-	}
+        // --- Invalid: d1 → c3 (3 → 18) ---
+        //
+        // 3 | . . X .
+        // 2 | . . . .
+        // 1 | . . . Q
+        //     a b c d
+        assert!(!is_queen_move(3, 18)); // invalid: not straight or diagonal
+    }
 
     #[test]
     fn test_king_moves() {
