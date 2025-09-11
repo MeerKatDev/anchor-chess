@@ -309,41 +309,48 @@ mod tests {
         let mut board: [u8; 32] = [0; 32];
 
         // Place white knight at b1 (square 1)
-        board[1] = 1;
+        board[1] = 2;
 
         let is_white = true;
 
         // --- Move two up, one left: valid ---
         //
-        // 3 | . . . . . . . .
+        // 3 | b . . . . . . .
         // 2 | . . . . . . . .
-        // 1 | . N . . . . . .
+        // 1 | . a . . . . . .
         //     a b c d e f g h
-        assert!(is_knight_move(1, 16, is_white, &board));
+        assert!(is_knight_move(2, 17, is_white, &board));
 
+        // --- Move two up: invalid ---
+        //
+        // 3 | . b . . . . . .
+        // 2 | . . . . . . . .
+        // 1 | . a . . . . . .
+        //     a b c d e f g h
+        assert!(!is_knight_move(2, 18, is_white, &board));
         // --- Move two up, one right: valid ---
         //
-        // 3 | . . . . . . . .
+        // 3 | . b . . . . . .
         // 2 | . . . . . . . .
-        // 1 | . N . . . . . .
+        // 1 | a . . . . . . .
         //     a b c d e f g h
-        assert!(is_knight_move(1, 18, is_white, &board));
+        assert!(is_knight_move(2, 19, is_white, &board));
 
         // --- Invalid: one right only ---
         //
-        // 1 | . N . . . . . .
+        // 1 | a b . . . . . .
         //     a b c d e f g h
-        assert!(!is_knight_move(1, 2, is_white, &board));
+        assert!(!is_knight_move(2, 3, is_white, &board));
 
         // --- Invalid: landing on friendly piece ---
         board[5] = 18; // pretend white piece at square 19 (destination)
-        assert!(!is_knight_move(1, 19, is_white, &board));
+        assert!(!is_knight_move(3, 19, is_white, &board));
 
         board[10] = 3; // place another friendly piece at square 10
-        assert!(!is_knight_move(1, 10, is_white, &board)); // assert 2
+        assert!(!is_knight_move(2, 10, is_white, &board)); // assert 2
 
-        board[18] = 16; // pretend black piece at square 10 (destination)
-        assert!(is_knight_move(1, 16, is_white, &board));
+        board[18] = 17; // pretend black piece at square 10 (destination)
+        assert!(is_knight_move(2, 17, is_white, &board));
     }
 
     #[test]
