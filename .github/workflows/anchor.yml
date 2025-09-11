@@ -61,7 +61,7 @@ jobs:
         run: |
           if ! command -v solana >/dev/null; then
             sh -c "$(curl -sSfL https://release.anza.xyz/stable/install)"
-            # export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
+            export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
             echo "/home/runner/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
           fi
           solana --version
