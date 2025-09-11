@@ -64,8 +64,10 @@ pub mod anchor_chess {
 
         // --- Validate move legality ---
         let current_pos = board.state[piece_idx as usize];
-        let move_legal = game_logic::is_move_legal(current_pos, piece_idx, destination);
-        require!(move_legal?, ChessError::InvalidMove);
+        let move_legal =
+            game_logic::is_move_legal(current_pos, piece_idx, destination, &board.state);
+        msg!("{:?}, {:?}, {:?}", current_pos, piece_idx, destination);
+        require!(move_legal?, ChessError::IllegalMove);
 
         // --- Capture any opposite color piece at the destination ---
         let mut target_range = if board.is_white_turn { 16..32 } else { 0..16 };

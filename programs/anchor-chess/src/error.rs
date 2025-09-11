@@ -2,8 +2,10 @@ use anchor_lang::prelude::*;
 
 #[error_code]
 pub enum ChessError {
-    #[msg("Invalid move")]
-    InvalidMove,
+    #[msg("Origin and destination are the same place.")]
+    NoMovement,
+    #[msg("Pieces don't move like that.")]
+    IllegalMove,
     #[msg("Invalid creator")]
     InvalidCreator,
     #[msg("Invalid player")]
