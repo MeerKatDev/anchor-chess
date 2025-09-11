@@ -1,0 +1,50 @@
+name: Anchor Tests
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  anchor-test:
+    runs-on: ubuntu-latest
+    env:
+      RUST_BACKTRACE: full
+
+    steps:
+      - uses: actions/checkout@v3
+
+      # Node.js for JS/TS tests
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 20
+
+      # Install Rust (for BPF build)
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          profile: minimal
+
+      # Solana CLI
+      - name: Install Solana
+        run: |
+          sh -c "$(curl -sSfL https://release.solana.com/stable/install)"
+          export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
+          solana --version
+
+      # Anchor CLI
+      - name: Install Anchor
+        run: |
+          cargo install --git https://github.com/coral-xyz/anchor avm --locked --force
+          avm install latest
+          avm use latest
+          anchor --version
+
+      # Build program
+      - name: Build Program
+        run: anchor build
+
+      # Run Anchor tests
+      - name: Run Anchor Tests
+        run: anchor test --skip-deploy
