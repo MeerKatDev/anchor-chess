@@ -12,4 +12,6 @@ Just another chess dApp on Solana.
 
 ## Features
 
- - 
+ - Functional frontend
+ - Basic set of instructions
+ - Working CLI with Rust unit tests and Anchor tests
