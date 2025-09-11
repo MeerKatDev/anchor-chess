@@ -37,17 +37,6 @@ jobs:
           toolchain: stable
           profile: minimal
 
-      # Cache cargo registry & target
-      - name: Cache cargo
-        uses: actions/cache@v3
-        with:
-          path: |
-            ~/.cargo/registry
-            ~/.cargo/git
-            target
-          key: cargo-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: cargo-
-
       # Solana CLI cache
       - name: Cache Solana CLI
         uses: actions/cache@v3
@@ -88,6 +77,12 @@ jobs:
       # Build program
       - name: Build Program
         run: anchor build
+
+      - name: Generate Solana keypair
+        run: |
+          mkdir -p ~/.config/solana
+          solana-keygen new --no-passphrase -o ~/.config/solana/id.json
+          solana config set --keypair ~/.config/solana/id.json
 
       # Run Anchor tests
       - name: Run Anchor Tests
