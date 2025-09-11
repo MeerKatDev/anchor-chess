@@ -48,7 +48,7 @@ jobs:
             target
           key: cargo-${{ runner.os }}-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: cargo-
-          
+
       # Solana CLI cache
       - name: Cache Solana CLI
         uses: actions/cache@v3
@@ -57,32 +57,39 @@ jobs:
           key: solana-cli-${{ runner.os }}-stable
           restore-keys: solana-cli-
 
-      # Install Solana CLI if missing
-      - name: Install Solana
+      - name: Install Solana CLI
         run: |
+          # Make sure cached path is in PATH first
           export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
+
+          # Install only if not already present
           if ! command -v solana >/dev/null; then
             sh -c "$(curl -sSfL https://release.anza.xyz/stable/install)"
-            echo "/home/runner/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
           fi
+
+          # Persist for subsequent steps in this workflow
+          echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
+
           solana --version
 
-      # Anchor CLI cache (optional: cache avm and ~/.local/share/anchor)
       - name: Cache Anchor CLI
         uses: actions/cache@v3
         with:
           path: |
             ~/.local/share/anchor
+            ~/.cargo/bin/anchor
           key: anchor-cli-${{ runner.os }}-latest
           restore-keys: anchor-cli-
 
-      # Install Anchor
       - name: Install Anchor
         run: |
+          export PATH="$HOME/.cargo/bin:$PATH"
           if ! command -v anchor >/dev/null; then
             cargo install --git https://github.com/coral-xyz/anchor avm --locked --force
             avm install latest
             avm use latest
+            export PATH="$HOME/.local/share/anchor/avm/current:$PATH"
+            echo "$HOME/.local/share/anchor/avm/current" >> $GITHUB_PATH
           fi
           anchor --version
 
