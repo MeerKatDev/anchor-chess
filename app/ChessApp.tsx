@@ -15,6 +15,7 @@ export default function ChessApp() {
     loading,
     handleCreateBoard,
     handleJoinBoard,
+    handleMovePiece,
     publicKey,
   } = useChessApp();
 
@@ -24,7 +25,7 @@ export default function ChessApp() {
 
       {status && <div className="text-gray-700">{status}</div>}
 
-      <ChessBoard state={boardState} />
+      <ChessBoard boardState={boardState} onMoveAttempt={handleMovePiece} />
 
       <div className="flex gap-4">
         <button

@@ -57,6 +57,11 @@ export default function useChessApp() {
     }
   };
 
+
+  const handleMovePiece = async (_1, _2) => {
+    return false
+  };
+
   return {
     boardState,
     setBoardState,
@@ -64,6 +69,7 @@ export default function useChessApp() {
     loading,
     handleCreateBoard,
     handleJoinBoard,
+    handleMovePiece,
     publicKey,
   };
 }
