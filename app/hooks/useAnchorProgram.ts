@@ -11,7 +11,7 @@ export function useAnchorProgram() {
     "confirmed"
   );
 
-  async function getProgram(): Promise<Program<AnchorChess>> {
+  function getProgram(): Program<AnchorChess> {
     if (!wallet.publicKey) throw new Error("Wallet not connected");
     const provider = new AnchorProvider(connection, wallet as any, {});
     return new Program(idl as AnchorChess, provider);
