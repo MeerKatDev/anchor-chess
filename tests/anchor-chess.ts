@@ -31,7 +31,7 @@ describe("Minimal chess game example", () => {
   it("Initializes the board", async () => {
     const tx = await program.methods
       .initialize(seed, null)
-      .accounts({
+      .accountsStrict({
         maker: maker.publicKey,
         board: boardPda,
         systemProgram: SystemProgram.programId,
@@ -63,11 +63,11 @@ describe("Minimal chess game example", () => {
   it("Makes a legal move", async () => {
     // Example: white pawn from index 8 (a2) to 16 (a3)
     /*
-        3 | D . . .    <- destination: a3
-        2 | O . . .    <- origin: a2
-        1 | . . . .
-            a b c d
-    */
+     *  3 | X . . .    <- destination: a3
+     *  2 | P . . .    <- origin: a2
+     *  1 | . . . .
+     *      a b c d
+     */
     // index indicating the piece type - doesn't change throughout the game
     const pieceIdx = 8; 
     // place on the board - changes throughout the game
@@ -75,7 +75,7 @@ describe("Minimal chess game example", () => {
 
     const tx = await program.methods
       .movePiece(pieceIdx, destination)
-      .accounts({
+      .accountsStrict({
         player: maker.publicKey,
         board: boardPda,
       })
@@ -91,7 +91,7 @@ describe("Minimal chess game example", () => {
   it("Resigns the game", async () => {
     const tx = await program.methods
       .resign()
-      .accounts({
+      .accountsStrict({
         maker: maker.publicKey,
         board: boardPda,
       })
@@ -103,7 +103,7 @@ describe("Minimal chess game example", () => {
   it("Closes the board account", async () => {
     const tx = await program.methods
       .close()
-      .accounts({
+      .accountsStrict({
         payer: maker.publicKey,
         maker: maker.publicKey,
         board: boardPda,
