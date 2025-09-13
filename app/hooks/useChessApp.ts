@@ -47,6 +47,34 @@ export default function useChessApp() {
     }
   };
 
+  const handleLoadBoard = async () => {
+    if (!publicKey) return;
+    
+    if (!joinInput) {
+      setStatus("Please paste a board PDA address.");
+      return;
+    }
+
+    try {
+      const program = await getProgram();
+      setLoading(true);
+      setStatus("Loading board...");
+
+      const boardPda = new web3.PublicKey(joinInput); // parse from input
+      const boardData = await program.account.board.fetch(boardPda);
+      console.log("BoardState", boardData.state);
+      console.log("BoardTurn", boardData.isWhiteTurn);
+      setBoardState(boardData.state);
+      setStatus("Board loaded from chain ✅");
+    } catch (err) {
+      console.error(err);
+      setStatus("Error loading board ❌");
+    } finally {
+      setLoading(false);
+    }
+
+  }
+
   const handleJoinBoard = async () => {
     if (!publicKey) return;
     
@@ -78,15 +106,20 @@ export default function useChessApp() {
   };
 
 
-  const handleMovePiece = async (pieceIdx: number, destination: number) => {
+  const handleMovePiece = async (pieceIdxInverted: number, destinationInverted: number) => {
+    const pieceIdx = 32 - pieceIdxInverted - 1;
+    const destination = 64 + 1 - destinationInverted;
     // public Key is player, not always the maker
     if (!publicKey) return;
     try {
       const program = await getProgram();
       setLoading(true);
       setStatus(`Moving piece ${pieceIdx} to ${destination}...`);
-
       const boardPda = new web3.PublicKey(joinInput); // parse from input
+
+
+      const boardData = await program.account.board.fetch(boardPda);
+      console.log("pieceIdx", pieceIdx, "destination", destination, "currentPos", boardData.state[pieceIdx]);
       const signature = await movePiece(program, publicKey, publicKey, boardPda, pieceIdx, destination);
 
       console.log("Piece moved:", signature);
@@ -120,6 +153,7 @@ export default function useChessApp() {
     status,
     loading,
     handleCreateBoard,
+    handleLoadBoard,
     handleJoinBoard,
     handleMovePiece,
     isMoveValid,

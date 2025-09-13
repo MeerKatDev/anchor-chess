@@ -16,6 +16,7 @@ export default function ChessApp() {
     status,
     loading,
     handleCreateBoard,
+    handleLoadBoard,
     handleJoinBoard,
     handleMovePiece,
     isMoveValid,
@@ -80,6 +81,17 @@ export default function ChessApp() {
           }`}
         >
           Join Board
+        </button>
+        <button
+          onClick={handleLoadBoard}
+          disabled={!joinInput || loading}
+          className={`px-4 py-2 rounded-xl text-white ${
+            joinInput
+              ? "bg-green-600 hover:bg-green-700"
+              : "bg-gray-400 cursor-not-allowed"
+          }`}
+        >
+          Load Board
         </button>
       </div>
     </div>

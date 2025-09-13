@@ -30,6 +30,7 @@ export default function ChessBoard({
     const pieceAtSquare = boardState.findIndex(pos => pos === squareIdx + 1);
 
     console.log("squareIdx clicked: ", squareIdx);
+    console.log("pieceAtSquare: ", pieceAtSquare);
 
     if (selected === null) {
       // select a piece
@@ -43,13 +44,13 @@ export default function ChessBoard({
 
       // if invalid, unselect and return
       if (validateMove && !validateMove(pieceIdx, destination)) {
-        setSelected(null);
         console.log("Invalid move!");
         return;
       }
 
       setProposedMove({ pieceIdx, destination });
       setModalOpen(true);
+      setSelected(null);
     }
   };
 
@@ -95,8 +96,11 @@ export default function ChessBoard({
   const ranks = [8, 7, 6, 5, 4, 3, 2, 1];
 
   const boardSquares = Array(64).fill(null);
-  boardState.forEach((pos, pieceIdx) => {
-    boardSquares[pos - 1] = pieceIdx; // positions are 1..64
+  boardState.forEach((position, pieceIdx) => {
+    // position is the factual position on the board
+    // pieceIdx is the type of piece
+    // console.log("(position, pieceIdx)", position, pieceIdx);
+    boardSquares[position - 1] = pieceIdx; // positions are 1..64
   });
 
   return (
@@ -122,21 +126,19 @@ export default function ChessBoard({
               {Array.from({ length: 8 }).map((_, col) => {
                 const squareIdx = row * 8 + col;
                 const isDark = (row + col) % 2 === 1;
-                // const boardSquares = Array(64).fill(null);
-                // boardState.forEach((pos, pieceIdx) => {
-                //   boardSquares[pos - 1] = pieceIdx; // positions are 1..64
-                // });
-                const pieceIdx = boardSquares[squareIdx];
-                const isSelected = pieceIdx !== null && selected === pieceIdx;
-                const selectedClass = isSelected ? "bg-yellow-400" : isDark ? "bg-green-700" : "bg-green-200";
+                const renderSquareIdx = 63 - squareIdx;
+
+                const piecePosition = boardSquares[renderSquareIdx];
+                const isSelected = piecePosition !== null && selected === piecePosition;
+                const selectedClass = isSelected ? "bg-yellow-400" : (isDark ? "bg-green-800" : "bg-green-500");
 
                 return (
                   <div
                     key={col}
-                    onClick={() => handleSquareClick(squareIdx)}
+                    onClick={() => handleSquareClick(renderSquareIdx)}
                     className={`w-12 h-12 flex items-center justify-center cursor-pointer ${selectedClass}`}
                   >
-                    <PieceRenderer squareIdx={pieceIdx} />
+                    <PieceRenderer pieceIdx={piecePosition} />
                   </div>
                 );
               })}
@@ -176,30 +178,35 @@ export default function ChessBoard({
   );
 }
 
-function PieceRenderer({ squareIdx }: { squareIdx: number | null }) {
-  if (squareIdx === null) return null;
+function PieceRenderer({ pieceIdx }: { pieceIdx: number | null }) {
 
-  if (squareIdx < 8) {
-    return <FaChessPawn className="text-black" />;
-  }
-  if (squareIdx < 16) {
-    switch (squareIdx) {
-      case 8: case 15: return <FaChessRook className="text-black" />;
-      case 9: case 14: return <FaChessKnight className="text-black" />;
-      case 10: case 13: return <FaChessBishop className="text-black" />;
-      case 11: return <FaChessQueen className="text-black" />;
-      case 12: return <FaChessKing className="text-black" />;
-    }
-  }
-  if (squareIdx < 24) return <FaChessPawn className="text-white" />;
+  if (pieceIdx === null) return null;
+
   // white back rank
-  const bIdx = squareIdx - 24;
-  switch (bIdx) {
+  switch (pieceIdx) {
     case 0: case 7: return <FaChessRook className="text-white" />;
     case 1: case 6: return <FaChessKnight className="text-white" />;
     case 2: case 5: return <FaChessBishop className="text-white" />;
     case 3: return <FaChessQueen className="text-white" />;
     case 4: return <FaChessKing className="text-white" />;
+  }
+
+  // white pawns
+  if (pieceIdx > 7 && pieceIdx < 16)
+    return <FaChessPawn className="text-white" />;
+  
+
+  // black pawns
+  if (pieceIdx > 15 && pieceIdx < 24) 
+    return <FaChessPawn className="text-black" />;
+
+  // black back rank
+  switch (pieceIdx) {
+    case 24: case 31: return <FaChessRook className="text-black" />;
+    case 25: case 30: return <FaChessKnight className="text-black" />;
+    case 26: case 29: return <FaChessBishop className="text-black" />;
+    case 27: return <FaChessQueen className="text-black" />;
+    case 28: return <FaChessKing className="text-black" />;
   }
   return null;
 }

@@ -9,17 +9,17 @@ export function useBoardState() {
 
     // --- White pieces ---
     // Pawns: a2..h2 -> squares 9..16
-    for (let i = 0; i < 8; i++) initial[i] = 9 + i;
+    for (let i = 0; i < 16; i++) initial[i] = i + 1;
 
     // Back rank: a1..h1
-    initial[8] = 1;  // Rook a1
-    initial[9] = 2;  // Knight b1
-    initial[10] = 3; // Bishop c1
-    initial[11] = 4; // Queen d1
-    initial[12] = 5; // King e1
-    initial[13] = 6; // Bishop f1
-    initial[14] = 7; // Knight g1
-    initial[15] = 8; // Rook h1
+    // initial[8] = 1;  // Rook a1
+    // initial[9] = 2;  // Knight b1
+    // initial[10] = 3; // Bishop c1
+    // initial[11] = 4; // Queen d1
+    // initial[12] = 5; // King e1
+    // initial[13] = 6; // Bishop f1
+    // initial[14] = 7; // Knight g1
+    // initial[15] = 8; // Rook h1
 
     // --- Black pieces ---
     // Pawns: a7..h7 -> squares 49..56
