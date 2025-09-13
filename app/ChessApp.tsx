@@ -11,12 +11,17 @@ const WalletMultiButtonDynamic = dynamic(
 export default function ChessApp() {
   const {
     boardState,
+    setBoardState,
+    boardPda,
     status,
     loading,
     handleCreateBoard,
     handleJoinBoard,
     handleMovePiece,
+    isMoveValid,
     publicKey,
+    joinInput,
+    setJoinInput,
   } = useChessApp();
 
   return (
@@ -25,7 +30,33 @@ export default function ChessApp() {
 
       {status && <div className="text-gray-700">{status}</div>}
 
-      <ChessBoard boardState={boardState} onMoveAttempt={handleMovePiece} />
+      {/* Display PDA (creator sees it) */}
+      <input
+        type="text"
+        value={boardPda?.toBase58() ?? ""}
+        readOnly
+        placeholder="Board PDA will appear here"
+        className={`border px-2 py-1 w-80 text-center ${
+          boardPda ? "border-gray-400 text-black" : "border-gray-300 text-gray-400"
+        }`}
+      />
+
+      {/* Input for joining (other player pastes it) */}
+      <input
+        type="text"
+        value={joinInput}
+        onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+          setJoinInput(e.target.value)
+        }
+        placeholder="Paste board PDA to join"
+        className="border border-gray-400 px-2 py-1 w-80 text-center"
+      />
+
+      <ChessBoard 
+        boardState={boardState} 
+        onMoveAttempt={handleMovePiece}
+        validateMove={isMoveValid} 
+      />
 
       <div className="flex gap-4">
         <button

@@ -48,9 +48,10 @@ describe("Minimal chess game example", () => {
   it("Guest joins the board", async () => {
     const tx = await program.methods
       .join(guest.publicKey)
-      .accounts({
+      .accountsStrict({
         maker: maker.publicKey,
         board: boardPda,
+        guest: guest.publicKey
       })
       .rpc({ commitment: "confirmed" });
 

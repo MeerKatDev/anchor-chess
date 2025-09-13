@@ -36,6 +36,7 @@ pub mod anchor_chess {
         let board = &mut ctx.accounts.board;
 
         require!(board.guest.is_none(), ChessError::GuestAlreadyPresent);
+        require!(ctx.accounts.maker.key() != guest, ChessError::InvalidPlayer);
 
         board.guest = Some(guest);
 
@@ -119,14 +120,17 @@ pub struct Initialize<'info> {
 #[derive(Accounts)]
 pub struct Join<'info> {
     #[account(mut)]
-    pub maker: Signer<'info>,
+    pub guest: Signer<'info>,
+    // Check that maker and board.maker are the same
     #[account(
         mut,
         seeds = [b"board", maker.key().as_ref(), board.seed.to_le_bytes().as_ref()],
         bump = board.bump,
-        has_one = maker,
+        has_one = maker
     )]
     pub board: Account<'info, Board>,
+    // read only needed for checking
+    pub maker: SystemAccount<'info>,
 }
 
 #[derive(Accounts)]

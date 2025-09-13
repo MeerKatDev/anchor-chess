@@ -13,14 +13,12 @@ import { Dialog } from "@headlessui/react";
 
 interface ChessBoardProps {
   boardState: number[];
-  isWhiteTurn: boolean;
   onMoveAttempt: (pieceIdx: number, destination: number) => void;
   validateMove?: (pieceIdx: number, destination: number) => boolean;
 }
 
 export default function ChessBoard({
   boardState,
-  isWhiteTurn,
   onMoveAttempt,
   validateMove,
 }: ChessBoardProps) {
@@ -31,6 +29,8 @@ export default function ChessBoard({
   const handleSquareClick = (squareIdx: number) => {
     const pieceAtSquare = boardState.findIndex(pos => pos === squareIdx + 1);
 
+    console.log("squareIdx clicked: ", squareIdx);
+
     if (selected === null) {
       // select a piece
       if (pieceAtSquare === -1) return; // no piece here
@@ -38,9 +38,13 @@ export default function ChessBoard({
     } else {
       const pieceIdx = selected;
       const destination = squareIdx + 1; // 1..64
+      console.log("pieceIdx: ", pieceIdx);
+      console.log("destination: ", destination);
 
+      // if invalid, unselect and return
       if (validateMove && !validateMove(pieceIdx, destination)) {
         setSelected(null);
+        console.log("Invalid move!");
         return;
       }
 
@@ -51,6 +55,7 @@ export default function ChessBoard({
 
   const confirmMove = () => {
     if (proposedMove) {
+      console.log("Calling onMoveAttempt!");
       onMoveAttempt(proposedMove.pieceIdx, proposedMove.destination);
     }
     setSelected(null);
