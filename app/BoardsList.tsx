@@ -1,8 +1,14 @@
 import { useState, useEffect } from "react";
-import { useAnchorProgram } from "./hooks/useAnchorProgram";
+import useAnchorProgram from "./hooks/useAnchorProgram";
 import { PublicKey } from "@solana/web3.js";
 import { useWallet } from "@solana/wallet-adapter-react";
 import Link from "next/link";
+
+function truncateMiddle(str: string, front = 4, back = 4): string {
+  if (!str) return "";
+  if (str.length <= front + back) return str;
+  return `${str.slice(0, front)}...${str.slice(-back)}`;
+}
 
 export default function BoardsList() {
   const { getProgram } = useAnchorProgram();
@@ -39,7 +45,7 @@ export default function BoardsList() {
   return (
     <div className="flex flex-col gap-8 flex-2">
       {boards.map(({ pubkey, account }) => (
-        <div key={pubkey.toBase58()} className="border p-2 rounded">
+        <div key={pubkey.toBase58()} className="border p-4 rounded">
 		      <p>
 		        <strong>PDA:</strong>{" "}
 		        <Link
@@ -49,11 +55,11 @@ export default function BoardsList() {
 			      }}
 		          className="text-blue-600 hover:underline"
 		        >
-		          {pubkey.toBase58()}
+              {truncateMiddle(pubkey.toBase58(), 6, 6)}
 		        </Link>
       		</p>
-	        <p><strong>White:</strong> {account.maker.toBase58()}</p>
-	        <p><strong>Black:</strong> {account.guest?.toBase58() ?? "Open"}</p>
+	        <p><strong>White:</strong> {truncateMiddle(account.maker.toBase58(), 6, 6)}</p>
+	        <p><strong>Black:</strong> {account.guest && truncateMiddle(account.guest?.toBase58(), 6, 6) || "Open"}</p>
         </div>
       ))}
     </div>

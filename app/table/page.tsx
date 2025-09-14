@@ -12,8 +12,6 @@ export default function BoardPage({
 }: {
   searchParams: Promise<{ pda?: string }>
 }) {
-  // const searchParams = useSearchParams();
-  // const pda = searchParams.get("pda"); // returns string | null
   const endpoint = "https://api.devnet.solana.com";
   const wallets = useMemo(() => [new PhantomWalletAdapter()], []);
 

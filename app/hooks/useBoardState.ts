@@ -10,7 +10,7 @@ export interface Board {
   state: number[]; // 32 entries, 1-based positions
 }
 
-export function useBoardState() {
+export default function useBoardState() {
   const [boardState, setBoardState] = useState<Board>(() => {
     const state = Array(32).fill(0);
 

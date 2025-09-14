@@ -44,9 +44,16 @@ export default function ChessBoard({
       console.log("pieceIdx: ", pieceIdx);
       console.log("destination: ", destination);
 
+      // if clicked same piece again → unselect
+      if (pieceAtSquare === pieceIdx) {
+        setSelected(null);
+        return;
+      }
+
       // if invalid, unselect and return
       if (validateMove && !validateMove(pieceIdx, destination)) {
         console.log("Invalid move!");
+        setSelected(null);
         return;
       }
 

@@ -4,7 +4,7 @@ import { useWallet } from "@solana/wallet-adapter-react";
 import idl from "../../target/idl/anchor_chess.json";
 import { AnchorChess } from "../../target/types/anchor_chess";
 
-export function useAnchorProgram() {
+export default function useAnchorProgram() {
   const wallet = useWallet();
   const connection = new Connection(
     "https://api.devnet.solana.com",
