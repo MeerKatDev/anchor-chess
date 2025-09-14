@@ -2,38 +2,42 @@
 
 import { useState } from "react";
 import { web3, BN } from "@coral-xyz/anchor";
-import { useBoardState } from "./useBoardState";
+import { useBoardState, Board } from "./useBoardState";
 import { useAnchorProgram } from "./useAnchorProgram";
 import { initializeBoard, joinBoard, movePiece } from "../instructions";
 
 export default function useChessApp() {
-  const { boardState, setBoardState } = useBoardState();
   const { wallet, getProgram } = useAnchorProgram();
+  const { boardState, setBoardState } = useBoardState();
 
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
   const [boardPda, setBoardPda] = useState<web3.PublicKey | null>(null);
-  const [seed] = useState(() => new BN(Date.now()));
-  const [joinInput, setJoinInput] = useState(""); // NEW input value
-
-  const publicKey = wallet.publicKey ?? null;
+  const [joinInput, setJoinInput] = useState("");
 
   const handleCreateBoard = async () => {
+    const publicKey = wallet.publicKey;
     if (!publicKey) return;
     try {
-      const program = await getProgram();
+      const program = getProgram();
       setLoading(true);
       setStatus("Creating board...");
       const { signature, board, successful } = await initializeBoard(
         program,
         publicKey,
-        seed,
+        new BN(Date.now()),
         null
       );
       if(successful) {
         console.log("Board created Tx:", signature);
         console.log("Board created addr:", board.toBase58());
         console.log("Board created:", board);
+
+        // no need to reload the whole state
+        // loadBoardStateFromChain(board);
+        boardState.maker = publicKey;
+        setBoardState(boardState);
+
         setBoardPda(board);
         setStatus("Board created successfully ✅");
       } else {
@@ -48,23 +52,21 @@ export default function useChessApp() {
   };
 
   const handleLoadBoard = async () => {
+    const publicKey = wallet.publicKey;
     if (!publicKey) return;
     
-    if (!joinInput) {
+    if (joinInput !== null) {
       setStatus("Please paste a board PDA address.");
       return;
     }
 
     try {
-      const program = await getProgram();
+      const program = getProgram();
       setLoading(true);
       setStatus("Loading board...");
-
       const boardPda = new web3.PublicKey(joinInput); // parse from input
-      const boardData = await program.account.board.fetch(boardPda);
-      console.log("BoardState", boardData.state);
-      console.log("BoardTurn", boardData.isWhiteTurn);
-      setBoardState(boardData.state);
+      loadBoardStateFromChain(boardPda);
+      setBoardPda(boardPda);
       setStatus("Board loaded from chain ✅");
     } catch (err) {
       console.error(err);
@@ -76,26 +78,24 @@ export default function useChessApp() {
   }
 
   const handleJoinBoard = async () => {
+    const publicKey = wallet.publicKey;
     if (!publicKey) return;
     
-    if (!joinInput) {
+    if (joinInput !== null) {
       setStatus("Please paste a board PDA address.");
       return;
     }
 
     try {
-      const program = await getProgram();
+      const program = getProgram();
       setLoading(true);
       setStatus("Joining board...");
 
-      const boardPda = new web3.PublicKey(joinInput); // parse from input
+      const boardPda = new web3.PublicKey(joinInput);
+      console.log("Getting board data from chain..");
       const boardData = await program.account.board.fetch(boardPda);
-      console.log("Board PDA", boardPda);
-      console.log("Board on-chain:", boardData);
+      console.log("Joining board..");
       const signature = await joinBoard(program, boardData.maker, publicKey, boardPda);
-      console.log("Joined board publicKey:", publicKey);
-      console.log("Joined board:", signature);
-      console.log("Board after joining", await program.account.board.fetch(boardPda));
       setStatus("Joined board ✅");
     } catch (err) {
       console.error(err);
@@ -105,11 +105,11 @@ export default function useChessApp() {
     }
   };
 
-
   const handleMovePiece = async (pieceIdxInverted: number, destinationInverted: number) => {
     const pieceIdx = 32 - pieceIdxInverted - 1;
     const destination = 64 + 1 - destinationInverted;
     // public Key is player, not always the maker
+    const publicKey = wallet.publicKey;
     if (!publicKey) return;
     try {
       const program = await getProgram();
@@ -117,23 +117,13 @@ export default function useChessApp() {
       setStatus(`Moving piece ${pieceIdx} to ${destination}...`);
       const boardPda = new web3.PublicKey(joinInput); // parse from input
 
-
       const boardData = await program.account.board.fetch(boardPda);
       console.log("pieceIdx", pieceIdx, "destination", destination, "currentPos", boardData.state[pieceIdx]);
-      const signature = await movePiece(program, publicKey, publicKey, boardPda, pieceIdx, destination);
+      const signature = await movePiece(program, publicKey, boardData.maker, boardPda, pieceIdx, destination);
 
       console.log("Piece moved:", signature);
+      loadBoardStateFromChain(boardPda);
       setStatus("Move successful ✅");
-
-      // Update board state locally (optional)
-      setBoardState(prev => {
-        const newState = [...prev];
-        console.log("pieceIdx involved", pieceIdx);
-        console.log("Prev board state", newState);
-        newState[pieceIdx] = destination;
-        console.log("Setting board state", newState);
-        return newState;
-      });
     } catch (err) {
       console.error(err);
       setStatus("Error moving piece ❌");
@@ -142,8 +132,13 @@ export default function useChessApp() {
     }
   };
 
-  const isMoveValid = (_pieceIdx, _destination) => {
-    return true;
+  const loadBoardStateFromChain = async (boardPda: PublicKey) => {
+    console.log("Calling `loadBoardStateFromChain` ...");
+    const { isWhiteTurn, maker, guest, state } = await program.account.board.fetch(boardPda);
+    console.log("Board State", state);
+    console.log("Board isWhiteTurn", isWhiteTurn);
+    const onchainBoardState: Board = { isWhiteTurn, maker, guest, state };
+    setBoardState(onchainBoardState);
   }
 
   return {
@@ -156,8 +151,7 @@ export default function useChessApp() {
     handleLoadBoard,
     handleJoinBoard,
     handleMovePiece,
-    isMoveValid,
-    publicKey,
+    wallet,
     joinInput,
     setJoinInput,
   };

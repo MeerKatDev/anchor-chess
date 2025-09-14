@@ -1,5 +1,3 @@
-"use client";
-
 import {
   FaChessPawn,
   FaChessKing,
@@ -10,24 +8,28 @@ import {
 } from "react-icons/fa";
 import { useState, Fragment } from "react";
 import { Dialog } from "@headlessui/react";
+import { Board } from "./useBoardState";
 
 interface ChessBoardProps {
-  boardState: number[];
+  board: Board;
+  isMyTurn: boolean;
   onMoveAttempt: (pieceIdx: number, destination: number) => void;
   validateMove?: (pieceIdx: number, destination: number) => boolean;
 }
 
 export default function ChessBoard({
-  boardState,
+  board,
+  isMyTurn,
   onMoveAttempt,
   validateMove,
 }: ChessBoardProps) {
+  const boardActive = board?.maker != null;
   const [selected, setSelected] = useState<number | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [proposedMove, setProposedMove] = useState<{ pieceIdx: number; destination: number } | null>(null);
 
   const handleSquareClick = (squareIdx: number) => {
-    const pieceAtSquare = boardState.findIndex(pos => pos === squareIdx + 1);
+    const pieceAtSquare = board.state.findIndex(pos => pos === squareIdx + 1);
 
     console.log("squareIdx clicked: ", squareIdx);
     console.log("pieceAtSquare: ", pieceAtSquare);
@@ -88,23 +90,27 @@ export default function ChessBoard({
     return `${file}${rank}`;
   };
 
-  const getPiecePosition = (pieceIdx: number, boardState: number[]): number => {
-    return boardState[pieceIdx];
-  }
-
-  const files = ["a", "b", "c", "d", "e", "f", "g", "h"];
-  const ranks = [8, 7, 6, 5, 4, 3, 2, 1];
-
   const boardSquares = Array(64).fill(null);
-  boardState.forEach((position, pieceIdx) => {
+  console.log("board", board);
+  board?.state.forEach((position, pieceIdx) => {
     // position is the factual position on the board
     // pieceIdx is the type of piece
     // console.log("(position, pieceIdx)", position, pieceIdx);
     boardSquares[position - 1] = pieceIdx; // positions are 1..64
   });
 
+  const turnIndicator = () => {
+    const InactiveMessage = (<div className="text-gray-500 italic">Board is inactive.</div>);
+    const MyMoveMessage = (<div className="text-gray-500 italic">It's your turn.</div>);
+    const OpponentMoveMessage = (<div className="text-gray-500 italic">It's the opponent turn.</div>);
+    return boardActive && (isMyTurn && MyMoveMessage || OpponentMoveMessage) || InactiveMessage;
+  };
+
+  const files = ["a", "b", "c", "d", "e", "f", "g", "h"];
+  const ranks = [8, 7, 6, 5, 4, 3, 2, 1];
+
   return (
-    <>
+    <> {turnIndicator()}
       <div className="inline-grid grid-rows-9 grid-cols-9">
         {/* Top-left empty corner */}
         <div></div>
@@ -138,7 +144,7 @@ export default function ChessBoard({
                     onClick={() => handleSquareClick(renderSquareIdx)}
                     className={`w-12 h-12 flex items-center justify-center cursor-pointer ${selectedClass}`}
                   >
-                    <PieceRenderer pieceIdx={piecePosition} />
+                    <PieceRenderer pieceIdx={piecePosition} boardActive={boardActive} />
                   </div>
                 );
               })}
@@ -162,7 +168,7 @@ export default function ChessBoard({
         <div className="bg-white p-6 rounded-xl">
           <Dialog.Title className="text-lg font-bold">Confirm Move</Dialog.Title>
           <Dialog.Description className="mt-2 mb-4">
-            Are you sure you want to move piece from {squareToCoord(getPiecePosition(proposedMove?.pieceIdx, boardState))} to {squareToCoord(proposedMove?.destination)}?
+            Are you sure you want to move piece from {squareToCoord(board?.state[proposedMove?.pieceIdx])} to {squareToCoord(proposedMove?.destination)}?
           </Dialog.Description>
           <div className="flex gap-4 justify-end">
             <button onClick={confirmMove} className="bg-green-600 text-white px-4 py-2 rounded-xl">
@@ -178,8 +184,8 @@ export default function ChessBoard({
   );
 }
 
-function PieceRenderer({ pieceIdx }: { pieceIdx: number | null }) {
-
+function PieceRenderer({ pieceIdx, boardActive }: { pieceIdx: number | null, boardActive: boolean }) {
+  if (!boardActive) return null;
   if (pieceIdx === null) return null;
 
   // white back rank
