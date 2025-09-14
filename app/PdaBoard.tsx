@@ -1,9 +1,10 @@
 import ChessBoard from "./ChessBoard";
 import dynamic from "next/dynamic";
-import { useState, useEffect } from "react";
+import { use, useState, useEffect } from "react";
 import { PublicKey } from "@solana/web3.js";
 import { useAnchorProgram } from "./hooks/useAnchorProgram";
 import { isMoveValid } from "./native";
+import { movePiece } from "./instructions";
 
 const WalletMultiButtonDynamic = dynamic(
   async () =>
@@ -12,14 +13,16 @@ const WalletMultiButtonDynamic = dynamic(
 );
 
 interface PdaBoardProps {
-  pda: string;
+  searchParams: Promise<{ pda?: string }>;
 }
 
-export default function PdaBoard({ pda }: PdaBoardProps) {
+export default function PdaBoard({ searchParams }: PdaBoardProps) {
   	const { wallet, getProgram } = useAnchorProgram();
   	const [boardState, setBoardState] = useState<any>(null);
 	const [loading, setLoading] = useState(false);
 	const [status, setStatus] = useState<string | null>(null);
+  	const params = use(searchParams);
+  	const pda = params.pda;
 
 	const handleMovePiece = async (pieceIdxInverted: number, destinationInverted: number) => {
 		const pieceIdx = 32 - pieceIdxInverted - 1;
@@ -31,14 +34,17 @@ export default function PdaBoard({ pda }: PdaBoardProps) {
 		const program = getProgram();
 		setLoading(true);
 		setStatus(`Moving piece ${pieceIdx} to ${destination}...`);
-		const boardPda = new PublicKey(joinInput); // parse from input
+		const boardPda = new PublicKey(pda); // parse from input
 
 		const boardData = await program.account.board.fetch(boardPda);
 		console.log("pieceIdx", pieceIdx, "destination", destination, "currentPos", boardData.state[pieceIdx]);
 		const signature = await movePiece(program, publicKey, boardData.maker, boardPda, pieceIdx, destination);
 
 		console.log("Piece moved:", signature);
-		loadBoardStateFromChain(boardPda);
+		// loadBoardStateFromChain(boardPda);
+    	const { isWhiteTurn, maker, guest, state } = await program.account.board.fetch(boardPda);
+	    const onchainBoardState = { isWhiteTurn, maker, guest, state };
+	    setBoardState(onchainBoardState);
 		setStatus("Move successful ✅");
 		} catch (err) {
 		console.error(err);

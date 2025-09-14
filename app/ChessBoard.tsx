@@ -8,7 +8,7 @@ import {
 } from "react-icons/fa";
 import { useState, Fragment } from "react";
 import { Dialog } from "@headlessui/react";
-import { Board } from "./useBoardState";
+import { Board } from "./hooks/useBoardState";
 
 interface ChessBoardProps {
   board: Board;

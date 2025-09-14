@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { web3, BN } from "@coral-xyz/anchor";
+import { web3, BN, Program } from "@coral-xyz/anchor";
+import { AnchorChess } from "../../target/types/anchor_chess";
 import { useBoardState, Board } from "./useBoardState";
 import { useAnchorProgram } from "./useAnchorProgram";
 import { initializeBoard, joinBoard, movePiece } from "../instructions";
@@ -65,7 +66,7 @@ export default function useChessApp() {
       setLoading(true);
       setStatus("Loading board...");
       const boardPda = new web3.PublicKey(joinInput); // parse from input
-      loadBoardStateFromChain(boardPda);
+      loadBoardStateFromChain(program, boardPda);
       setBoardPda(boardPda);
       setStatus("Board loaded from chain ✅");
     } catch (err) {
@@ -122,7 +123,7 @@ export default function useChessApp() {
       const signature = await movePiece(program, publicKey, boardData.maker, boardPda, pieceIdx, destination);
 
       console.log("Piece moved:", signature);
-      loadBoardStateFromChain(boardPda);
+      loadBoardStateFromChain(program, boardPda);
       setStatus("Move successful ✅");
     } catch (err) {
       console.error(err);
@@ -132,7 +133,7 @@ export default function useChessApp() {
     }
   };
 
-  const loadBoardStateFromChain = async (boardPda: PublicKey) => {
+  const loadBoardStateFromChain = async (program: Program<AnchorChess>, boardPda: web3.PublicKey) => {
     console.log("Calling `loadBoardStateFromChain` ...");
     const { isWhiteTurn, maker, guest, state } = await program.account.board.fetch(boardPda);
     console.log("Board State", state);
