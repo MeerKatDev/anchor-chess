@@ -26,10 +26,13 @@ export default function ChessBoard({
   const boardActive = board?.maker != null;
   const [selected, setSelected] = useState<number | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
-  const [proposedMove, setProposedMove] = useState<{ pieceIdx: number; destination: number } | null>(null);
+  const [proposedMove, setProposedMove] = useState<{
+    pieceIdx: number;
+    destination: number;
+  } | null>(null);
 
   const handleSquareClick = (squareIdx: number) => {
-    const pieceAtSquare = board.state.findIndex(pos => pos === squareIdx + 1);
+    const pieceAtSquare = board.state.findIndex((pos) => pos === squareIdx + 1);
 
     console.log("squareIdx clicked: ", squareIdx);
     console.log("pieceAtSquare: ", pieceAtSquare);
@@ -107,17 +110,28 @@ export default function ChessBoard({
   });
 
   const turnIndicator = () => {
-    const InactiveMessage = (<div className="text-gray-500 italic">Board is inactive.</div>);
-    const MyMoveMessage = (<div className="text-gray-500 italic">It's your turn.</div>);
-    const OpponentMoveMessage = (<div className="text-gray-500 italic">It's the opponent turn.</div>);
-    return boardActive && (isMyTurn && MyMoveMessage || OpponentMoveMessage) || InactiveMessage;
+    const InactiveMessage = (
+      <div className="text-gray-500 italic">Board is inactive.</div>
+    );
+    const MyMoveMessage = (
+      <div className="text-gray-500 italic">It's your turn.</div>
+    );
+    const OpponentMoveMessage = (
+      <div className="text-gray-500 italic">It's the opponent turn.</div>
+    );
+    return (
+      (boardActive && ((isMyTurn && MyMoveMessage) || OpponentMoveMessage)) ||
+      InactiveMessage
+    );
   };
 
   const files = ["a", "b", "c", "d", "e", "f", "g", "h"];
   const ranks = [8, 7, 6, 5, 4, 3, 2, 1];
 
   return (
-    <> {turnIndicator()}
+    <>
+      {" "}
+      {turnIndicator()}
       <div className="inline-grid grid-rows-9 grid-cols-9">
         {/* Top-left empty corner */}
         <div></div>
@@ -133,7 +147,9 @@ export default function ChessBoard({
           return (
             <Fragment key={rank}>
               {/* Rank number on left */}
-              <div className="w-12 h-12 flex items-center justify-center font-bold text-gray-700">{rank}</div>
+              <div className="w-12 h-12 flex items-center justify-center font-bold text-gray-700">
+                {rank}
+              </div>
 
               {/* Squares */}
               {Array.from({ length: 8 }).map((_, col) => {
@@ -142,8 +158,13 @@ export default function ChessBoard({
                 const renderSquareIdx = 63 - squareIdx;
 
                 const piecePosition = boardSquares[renderSquareIdx];
-                const isSelected = piecePosition !== null && selected === piecePosition;
-                const selectedClass = isSelected ? "bg-yellow-400" : (isDark ? "bg-green-800" : "bg-green-500");
+                const isSelected =
+                  piecePosition !== null && selected === piecePosition;
+                const selectedClass = isSelected
+                  ? "bg-yellow-400"
+                  : isDark
+                  ? "bg-green-800"
+                  : "bg-green-500";
 
                 return (
                   <div
@@ -151,7 +172,10 @@ export default function ChessBoard({
                     onClick={() => handleSquareClick(renderSquareIdx)}
                     className={`w-12 h-12 flex items-center justify-center cursor-pointer ${selectedClass}`}
                   >
-                    <PieceRenderer pieceIdx={piecePosition} boardActive={boardActive} />
+                    <PieceRenderer
+                      pieceIdx={piecePosition}
+                      boardActive={boardActive}
+                    />
                   </div>
                 );
               })}
@@ -163,25 +187,41 @@ export default function ChessBoard({
         <div></div>
 
         {/* Files A-H at bottom */}
-        {["a","b","c","d","e","f","g","h"].map((f) => (
-          <div key={f} className="w-12 h-12 flex items-center justify-center font-bold text-gray-700">
+        {["a", "b", "c", "d", "e", "f", "g", "h"].map((f) => (
+          <div
+            key={f}
+            className="w-12 h-12 flex items-center justify-center font-bold text-gray-700"
+          >
             {f}
           </div>
         ))}
       </div>
-
       {/* Confirmation Modal */}
-      <Dialog open={modalOpen} onClose={cancelMove} className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+      <Dialog
+        open={modalOpen}
+        onClose={cancelMove}
+        className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+      >
         <div className="bg-white p-6 rounded-xl">
-          <Dialog.Title className="text-lg font-bold">Confirm Move</Dialog.Title>
+          <Dialog.Title className="text-lg font-bold">
+            Confirm Move
+          </Dialog.Title>
           <Dialog.Description className="mt-2 mb-4">
-            Are you sure you want to move piece from {squareToCoord(board?.state[proposedMove?.pieceIdx])} to {squareToCoord(proposedMove?.destination)}?
+            Are you sure you want to move piece from{" "}
+            {squareToCoord(board?.state[proposedMove?.pieceIdx])} to{" "}
+            {squareToCoord(proposedMove?.destination)}?
           </Dialog.Description>
           <div className="flex gap-4 justify-end">
-            <button onClick={confirmMove} className="bg-green-600 text-white px-4 py-2 rounded-xl">
+            <button
+              onClick={confirmMove}
+              className="bg-green-600 text-white px-4 py-2 rounded-xl"
+            >
               Confirm
             </button>
-            <button onClick={cancelMove} className="bg-red-600 text-white px-4 py-2 rounded-xl">
+            <button
+              onClick={cancelMove}
+              className="bg-red-600 text-white px-4 py-2 rounded-xl"
+            >
               Cancel
             </button>
           </div>
@@ -191,37 +231,56 @@ export default function ChessBoard({
   );
 }
 
-function PieceRenderer({ pieceIdx, boardActive }: { pieceIdx: number | null, boardActive: boolean }) {
+function PieceRenderer({
+  pieceIdx,
+  boardActive,
+}: {
+  pieceIdx: number | null;
+  boardActive: boolean;
+}) {
   if (!boardActive) return null;
   if (pieceIdx === null) return null;
 
   // white back rank
   switch (pieceIdx) {
-    case 0: case 7: return <FaChessRook className="text-white" />;
-    case 1: case 6: return <FaChessKnight className="text-white" />;
-    case 2: case 5: return <FaChessBishop className="text-white" />;
-    case 3: return <FaChessQueen className="text-white" />;
-    case 4: return <FaChessKing className="text-white" />;
+    case 0:
+    case 7:
+      return <FaChessRook className="text-white" />;
+    case 1:
+    case 6:
+      return <FaChessKnight className="text-white" />;
+    case 2:
+    case 5:
+      return <FaChessBishop className="text-white" />;
+    case 3:
+      return <FaChessQueen className="text-white" />;
+    case 4:
+      return <FaChessKing className="text-white" />;
   }
 
   // white pawns
   if (pieceIdx > 7 && pieceIdx < 16)
     return <FaChessPawn className="text-white" />;
-  
 
   // black pawns
-  if (pieceIdx > 15 && pieceIdx < 24) 
+  if (pieceIdx > 15 && pieceIdx < 24)
     return <FaChessPawn className="text-black" />;
 
   // black back rank
   switch (pieceIdx) {
-    case 24: case 31: return <FaChessRook className="text-black" />;
-    case 25: case 30: return <FaChessKnight className="text-black" />;
-    case 26: case 29: return <FaChessBishop className="text-black" />;
-    case 27: return <FaChessQueen className="text-black" />;
-    case 28: return <FaChessKing className="text-black" />;
+    case 24:
+    case 31:
+      return <FaChessRook className="text-black" />;
+    case 25:
+    case 30:
+      return <FaChessKnight className="text-black" />;
+    case 26:
+    case 29:
+      return <FaChessBishop className="text-black" />;
+    case 27:
+      return <FaChessQueen className="text-black" />;
+    case 28:
+      return <FaChessKing className="text-black" />;
   }
   return null;
 }
-
-

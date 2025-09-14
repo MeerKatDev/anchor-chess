@@ -1,7 +1,7 @@
 import { Program, web3, BN } from "@coral-xyz/anchor";
 import { AnchorChess } from "../target/types/anchor_chess";
 import { WalletSignTransactionError } from "@solana/wallet-adapter-base";
-  
+
 const systemProgram = web3.SystemProgram.programId;
 const BOARD_SEED = Buffer.from("board");
 
@@ -50,7 +50,6 @@ export async function joinBoard(
   guest: web3.PublicKey,
   board: web3.PublicKey // PDA
 ) {
-
   try {
     const signature = await program.methods
       .join(guest)
@@ -86,7 +85,6 @@ export async function movePiece(
   pieceIdx: number,
   destination: number
 ) {
-
   try {
     const signature = await program.methods
       .movePiece(pieceIdx, destination)
@@ -100,7 +98,6 @@ export async function movePiece(
       console.warn("WalletSignTransactionError:", err.message);
       return { signature: null, board, successful: false };
     }
-    
 
     // Other errors (program error, insufficient funds, etc.)
     console.error("Transaction failed:", err);

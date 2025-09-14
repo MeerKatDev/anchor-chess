@@ -2,7 +2,10 @@
 
 import { useSearchParams } from "next/navigation";
 import { PhantomWalletAdapter } from "@solana/wallet-adapter-wallets";
-import { ConnectionProvider, WalletProvider } from "@solana/wallet-adapter-react";
+import {
+  ConnectionProvider,
+  WalletProvider,
+} from "@solana/wallet-adapter-react";
 import { WalletModalProvider } from "@solana/wallet-adapter-react-ui";
 import PdaBoard from "../PdaBoard";
 import { useMemo } from "react";
@@ -10,7 +13,7 @@ import { useMemo } from "react";
 export default function BoardPage({
   searchParams,
 }: {
-  searchParams: Promise<{ pda?: string }>
+  searchParams: Promise<{ pda?: string }>;
 }) {
   const endpoint = "https://api.devnet.solana.com";
   const wallets = useMemo(() => [new PhantomWalletAdapter()], []);
@@ -20,7 +23,7 @@ export default function BoardPage({
       <WalletProvider wallets={wallets} autoConnect>
         <WalletModalProvider>
           <div className="flex flex-col items-center gap-2 p-4 flex-2 border-1">
-            <PdaBoard searchParams={searchParams}/>
+            <PdaBoard searchParams={searchParams} />
           </div>
         </WalletModalProvider>
       </WalletProvider>

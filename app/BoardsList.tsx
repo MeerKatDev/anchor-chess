@@ -13,7 +13,9 @@ function truncateMiddle(str: string, front = 4, back = 4): string {
 export default function BoardsList() {
   const { getProgram } = useAnchorProgram();
   const wallet = useWallet();
-  const [boards, setBoards] = useState<{ pubkey: PublicKey; account: any }[]>([]);
+  const [boards, setBoards] = useState<{ pubkey: PublicKey; account: any }[]>(
+    []
+  );
   const [loading, setLoading] = useState(false);
   if (!wallet) return; // wait for wallet to connect
   const walletPubkey = wallet.publicKey;
@@ -24,7 +26,7 @@ export default function BoardsList() {
       try {
         const program = getProgram();
         const boardAccounts = await program.account.board.all(); // async RPC call
-        const formatted = boardAccounts.map(b => ({
+        const formatted = boardAccounts.map((b) => ({
           pubkey: b.publicKey,
           account: b.account,
         }));
@@ -46,20 +48,28 @@ export default function BoardsList() {
     <div className="flex flex-col gap-8 flex-2">
       {boards.map(({ pubkey, account }) => (
         <div key={pubkey.toBase58()} className="border p-4 rounded">
-		      <p>
-		        <strong>PDA:</strong>{" "}
-		        <Link
-			      href={{
-			        pathname: '/table',
-			        query: { pda: pubkey.toBase58() },
-			      }}
-		          className="text-blue-600 hover:underline"
-		        >
+          <p>
+            <strong>PDA:</strong>{" "}
+            <Link
+              href={{
+                pathname: "/table",
+                query: { pda: pubkey.toBase58() },
+              }}
+              className="text-blue-600 hover:underline"
+            >
               {truncateMiddle(pubkey.toBase58(), 6, 6)}
-		        </Link>
-      		</p>
-	        <p><strong>White:</strong> {truncateMiddle(account.maker.toBase58(), 6, 6)}</p>
-	        <p><strong>Black:</strong> {account.guest && truncateMiddle(account.guest?.toBase58(), 6, 6) || "Open"}</p>
+            </Link>
+          </p>
+          <p>
+            <strong>White:</strong>{" "}
+            {truncateMiddle(account.maker.toBase58(), 6, 6)}
+          </p>
+          <p>
+            <strong>Black:</strong>{" "}
+            {(account.guest &&
+              truncateMiddle(account.guest?.toBase58(), 6, 6)) ||
+              "Open"}
+          </p>
         </div>
       ))}
     </div>

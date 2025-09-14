@@ -42,7 +42,11 @@ describe("Minimal chess game example", () => {
 
     const board = await program.account.board.fetch(boardPda);
     console.log("Board guest:", board.guest?.toBase58());
-    assert.equal(board.isWhiteTurn, true, "Board should start with white's turn");
+    assert.equal(
+      board.isWhiteTurn,
+      true,
+      "Board should start with white's turn"
+    );
   });
 
   it("Guest joins the board", async () => {
@@ -51,7 +55,7 @@ describe("Minimal chess game example", () => {
       .accountsStrict({
         maker: maker.publicKey,
         board: boardPda,
-        guest: guest.publicKey
+        guest: guest.publicKey,
       })
       .rpc({ commitment: "confirmed" });
 
@@ -70,7 +74,7 @@ describe("Minimal chess game example", () => {
      *      a b c d
      */
     // index indicating the piece type - doesn't change throughout the game
-    const pieceIdx = 8; 
+    const pieceIdx = 8;
     // place on the board - changes throughout the game
     const destination = 17;
 
@@ -85,8 +89,16 @@ describe("Minimal chess game example", () => {
     console.log("Move piece tx:", tx);
 
     const board = await program.account.board.fetch(boardPda);
-    assert.equal(destination, board.state[pieceIdx], "New position should be fetched!");
-    assert.equal(board.isWhiteTurn, false, "Board should start with white's turn and then change");
+    assert.equal(
+      destination,
+      board.state[pieceIdx],
+      "New position should be fetched!"
+    );
+    assert.equal(
+      board.isWhiteTurn,
+      false,
+      "Board should start with white's turn and then change"
+    );
   });
 
   it("Resigns the game", async () => {

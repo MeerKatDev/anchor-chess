@@ -21,8 +21,8 @@ export default function MainBoard() {
   const [boardPda, setBoardPda] = useState<web3.PublicKey | null>(null);
   const [joinInput, setJoinInput] = useState("");
 
-	const canJoinOrLoad = !!wallet.publicKey && !!joinInput;
-	
+  const canJoinOrLoad = !!wallet.publicKey && !!joinInput;
+
   const router = useRouter();
 
   const handleCreateBoard = async () => {
@@ -39,7 +39,7 @@ export default function MainBoard() {
         new BN(Date.now()),
         null
       );
-      if(successful) {
+      if (successful) {
         router.push(`/table?pda=${board.toBase58()}`);
         setStatus("Board created successfully ✅");
       } else {
@@ -56,7 +56,7 @@ export default function MainBoard() {
   const handleJoinBoard = async () => {
     const publicKey = wallet.publicKey;
     if (!publicKey) return;
-    
+
     if (joinInput) {
       setStatus("Please paste a board PDA address.");
       return;
@@ -71,7 +71,12 @@ export default function MainBoard() {
       console.log("Getting board data from chain..");
       const boardData = await program.account.board.fetch(boardPda);
       console.log("Joining board..");
-      const signature = await joinBoard(program, boardData.maker, publicKey, boardPda);
+      const signature = await joinBoard(
+        program,
+        boardData.maker,
+        publicKey,
+        boardPda
+      );
       setStatus("Joined board ✅");
     } catch (err) {
       console.error(err);
@@ -81,52 +86,52 @@ export default function MainBoard() {
     }
   };
 
-	return (
-		<>
-		<h2>Chess board game on Solana</h2>
-		<WalletMultiButtonDynamic className="!bg-blue-600 hover:!bg-blue-700 !rounded-xl" />
-		
-		<div>
-			Chess board games. On the right, games that could be joined. 
-			Otherwise, you can create a new game with the button below.
-		</div>
-		<div>
-		  <button
-		    onClick={handleCreateBoard}
-		    disabled={!wallet.publicKey || loading}
-		    className={`px-4 py-2 rounded-xl text-white ${
-		      wallet.publicKey
-		        ? "bg-indigo-600 hover:bg-indigo-700"
-		        : "bg-gray-400 cursor-not-allowed"
-		    }`}
-		  >
-		    Create Board
-		  </button>
-		</div>
-		{/* Input for joining (other player pastes it) */}
-		<div>
-		<hr className="border mb-2"/>
-			<input
-			  type="text"
-			  value={joinInput}
-			  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-			    setJoinInput(e.target.value)
-			  }
-			  placeholder="Paste board PDA to join"
-			  className="border border-gray-400 px-2 py-1 w-80 text-center"
-			/>
-		  <button
-		    onClick={handleJoinBoard}
-		    disabled={!canJoinOrLoad || loading}
-		    className={`px-4 py-2 rounded-xl text-white ml-4 ${
-		      canJoinOrLoad
-		        ? "bg-green-600 hover:bg-green-700"
-		        : "bg-gray-400 cursor-not-allowed"
-		    }`}
-		  >
-		    Join Board
-		  </button>
-		</div>
-  </>
-	);
+  return (
+    <>
+      <h2>Chess board game on Solana</h2>
+      <WalletMultiButtonDynamic className="!bg-blue-600 hover:!bg-blue-700 !rounded-xl" />
+
+      <div>
+        Chess board games. On the right, games that could be joined. Otherwise,
+        you can create a new game with the button below.
+      </div>
+      <div>
+        <button
+          onClick={handleCreateBoard}
+          disabled={!wallet.publicKey || loading}
+          className={`px-4 py-2 rounded-xl text-white ${
+            wallet.publicKey
+              ? "bg-indigo-600 hover:bg-indigo-700"
+              : "bg-gray-400 cursor-not-allowed"
+          }`}
+        >
+          Create Board
+        </button>
+      </div>
+      {/* Input for joining (other player pastes it) */}
+      <div>
+        <hr className="border mb-2" />
+        <input
+          type="text"
+          value={joinInput}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+            setJoinInput(e.target.value)
+          }
+          placeholder="Paste board PDA to join"
+          className="border border-gray-400 px-2 py-1 w-80 text-center"
+        />
+        <button
+          onClick={handleJoinBoard}
+          disabled={!canJoinOrLoad || loading}
+          className={`px-4 py-2 rounded-xl text-white ml-4 ${
+            canJoinOrLoad
+              ? "bg-green-600 hover:bg-green-700"
+              : "bg-gray-400 cursor-not-allowed"
+          }`}
+        >
+          Join Board
+        </button>
+      </div>
+    </>
+  );
 }
