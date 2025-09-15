@@ -1,12 +1,12 @@
 import { useState } from "react";
-import { PublicKey } from "@solana/web3.js";
+import { web3 } from "@coral-xyz/anchor";
 
 // Mirror of the Rust struct `Board`
 // without bump and seed and maker at the beginning
 export interface Board {
   isWhiteTurn: boolean;
-  maker: PublicKey | null;
-  guest: PublicKey | null; // Option<Pubkey>
+  maker: web3.PublicKey | null;
+  guest: web3.PublicKey | null; // Option<Pubkey>
   state: number[]; // 32 entries, 1-based positions
 }
 
