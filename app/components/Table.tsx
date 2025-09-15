@@ -163,7 +163,7 @@ export default function Table({ searchParams }: PdaBoardProps) {
         className="flex items-center gap-2 text-blue-600 hover:text-blue-800"
       >
         <FaArrowLeft />
-        <span>Back to Home</span>
+        <span>Go back to Tables</span>
       </Link>
       <WalletMultiButtonDynamic className="!bg-blue-600 hover:!bg-blue-700 !rounded-xl" />
 
