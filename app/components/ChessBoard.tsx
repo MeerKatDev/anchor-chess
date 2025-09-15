@@ -1,7 +1,7 @@
 import { useState, Fragment } from "react";
-import PieceRenderer from "./components/PieceRenderer";
-import ChessBoardDialog from "./components/ChessBoardDialog";
-import { Board } from "./hooks/useBoardState";
+import PieceRenderer from "./PieceRenderer";
+import ChessBoardDialog from "./ChessBoardDialog";
+import { Board } from "../hooks/useBoardState";
 
 interface ChessBoardProps {
   board: Board;

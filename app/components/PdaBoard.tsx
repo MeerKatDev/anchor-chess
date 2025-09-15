@@ -2,9 +2,9 @@ import ChessBoard from "./ChessBoard";
 import dynamic from "next/dynamic";
 import { use, useState, useEffect } from "react";
 import { web3 } from "@coral-xyz/anchor";
-import useAnchorProgram from "./hooks/useAnchorProgram";
-import { isMoveValid } from "./native";
-import { movePiece } from "./instructions";
+import useAnchorProgram from "../hooks/useAnchorProgram";
+import { isMoveValid } from "../native";
+import { movePiece } from "../instructions";
 
 const WalletMultiButtonDynamic = dynamic(
   async () =>

@@ -1,4 +1,3 @@
-import ChessBoard from "./ChessBoard";
 import dynamic from "next/dynamic";
 import useAnchorProgram from "./hooks/useAnchorProgram";
 import { useState } from "react";
