@@ -20,4 +20,6 @@ pub enum ChessError {
     InvalidPiece,
     #[msg("A guest already joined")]
     GuestAlreadyPresent,
+    #[msg("Cannot close the match.")]
+    CannotCloseMatch,
 }

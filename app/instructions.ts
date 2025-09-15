@@ -108,12 +108,12 @@ export async function movePiece(
 // --- 4. Resign from game ---
 export async function resignGame(
   program: Program<AnchorChess>,
-  maker: web3.PublicKey,
+  player: web3.PublicKey,
   board: web3.PublicKey
 ) {
   const signature = await program.methods
     .resign()
-    .accountsStrict({ maker, board })
+    .accountsStrict({ player, board })
     .rpc();
 
   return signature;
@@ -122,13 +122,12 @@ export async function resignGame(
 // --- 5. Close the board ---
 export async function closeBoard(
   program: Program<AnchorChess>,
-  payer: web3.PublicKey,
   maker: web3.PublicKey,
   board: web3.PublicKey
 ) {
   const signature = await program.methods
     .close()
-    .accountsStrict({ payer, maker, board })
+    .accountsStrict({ maker, board })
     .rpc();
 
   return signature;

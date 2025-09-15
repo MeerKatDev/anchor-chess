@@ -15,6 +15,7 @@ pub struct Board {
     /// First 16 are white, other 16 are black.
     /// The whites are at the bottom, 1-index is the left tower.
     pub state: [u8; 32],
+    pub game_over: bool,
 }
 
 impl Board {
@@ -26,6 +27,7 @@ impl Board {
             guest,
             maker,
             state: Self::new_chessboard(),
+            game_over: false,
         }
     }
 
@@ -35,6 +37,8 @@ impl Board {
             resigning_player.eq(&self.maker) || Some(resigning_player).eq(&self.guest),
             ChessError::InvalidPlayer
         );
+
+        self.game_over = true;
 
         Ok(())
     }

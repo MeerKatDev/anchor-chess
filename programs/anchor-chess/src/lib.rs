@@ -89,13 +89,17 @@ pub mod anchor_chess {
 
     /// resign - end the game earlier
     pub fn resign(ctx: Context<Resign>) -> Result<()> {
-        ctx.accounts.board.resign(ctx.accounts.maker.key())?;
+        let board = &mut ctx.accounts.board;
+        let player_key = ctx.accounts.player.key();
+        board.resign(player_key)?;
 
         Ok(())
     }
 
     /// Close the board account
-    pub fn close(_ctx: Context<Close>) -> Result<()> {
+    pub fn close(ctx: Context<Close>) -> Result<()> {
+        let board = &ctx.accounts.board;
+        require!(board.game_over, ChessError::CannotCloseMatch);
         // Anchor will automatically transfer lamports back to `maker` and close account
         Ok(())
     }
@@ -152,7 +156,7 @@ pub struct Move<'info> {
 #[derive(Accounts)]
 pub struct Resign<'info> {
     #[account(mut)]
-    pub maker: Signer<'info>,
+    pub player: Signer<'info>,
     #[account(mut)]
     pub board: Account<'info, Board>,
 }
@@ -160,9 +164,7 @@ pub struct Resign<'info> {
 #[derive(Accounts)]
 pub struct Close<'info> {
     #[account(mut)]
-    pub payer: Signer<'info>,
-    #[account(mut)]
-    pub maker: SystemAccount<'info>,
+    pub maker: Signer<'info>,
     #[account(
         mut,
         close = maker,

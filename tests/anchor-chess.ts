@@ -105,7 +105,7 @@ describe("Minimal chess game example", () => {
     const tx = await program.methods
       .resign()
       .accountsStrict({
-        maker: maker.publicKey,
+        player: maker.publicKey,
         board: boardPda,
       })
       .rpc({ commitment: "confirmed" });
@@ -117,7 +117,6 @@ describe("Minimal chess game example", () => {
     const tx = await program.methods
       .close()
       .accountsStrict({
-        payer: maker.publicKey,
         maker: maker.publicKey,
         board: boardPda,
       })

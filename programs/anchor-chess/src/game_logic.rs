@@ -567,7 +567,7 @@ mod tests {
         //   | a b c d e f
         board[0] = 13; // white piece at e2
         assert!(!is_king_move(5, 13, is_white, &board)); // blocked by friendly
-        // remove from board
+                                                         // remove from board
         board[0] = 0;
 
         // --- Capture enemy piece ---

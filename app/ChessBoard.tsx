@@ -1,13 +1,6 @@
-import {
-  FaChessPawn,
-  FaChessKing,
-  FaChessQueen,
-  FaChessRook,
-  FaChessKnight,
-  FaChessBishop,
-} from "react-icons/fa";
 import { useState, Fragment } from "react";
-import { Dialog } from "@headlessui/react";
+import PieceRenderer from "./components/PieceRenderer";
+import ChessBoardDialog from "./components/ChessBoardDialog";
 import { Board } from "./hooks/useBoardState";
 
 interface ChessBoardProps {
@@ -128,6 +121,16 @@ export default function ChessBoard({
   const files = ["a", "b", "c", "d", "e", "f", "g", "h"];
   const ranks = [8, 7, 6, 5, 4, 3, 2, 1];
 
+  const dialogMessage = (() => {
+    if (!proposedMove) return;
+    if (!board) return;
+
+    const fromPos = squareToCoord(board.state[proposedMove.pieceIdx]);
+    const toPos = squareToCoord(proposedMove.destination);
+
+    return `Are you sure you want to move the piece from ${fromPos} to ${toPos}?`;
+  })();
+
   return (
     <>
       {" "}
@@ -197,90 +200,12 @@ export default function ChessBoard({
         ))}
       </div>
       {/* Confirmation Modal */}
-      <Dialog
-        open={modalOpen}
-        onClose={cancelMove}
-        className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
-      >
-        <div className="bg-white p-6 rounded-xl">
-          <Dialog.Title className="text-lg font-bold">
-            Confirm Move
-          </Dialog.Title>
-          <Dialog.Description className="mt-2 mb-4">
-            Are you sure you want to move piece from{" "}
-            {squareToCoord(board?.state[proposedMove?.pieceIdx])} to{" "}
-            {squareToCoord(proposedMove?.destination)}?
-          </Dialog.Description>
-          <div className="flex gap-4 justify-end">
-            <button
-              onClick={confirmMove}
-              className="bg-green-600 text-white px-4 py-2 rounded-xl"
-            >
-              Confirm
-            </button>
-            <button
-              onClick={cancelMove}
-              className="bg-red-600 text-white px-4 py-2 rounded-xl"
-            >
-              Cancel
-            </button>
-          </div>
-        </div>
-      </Dialog>
+      <ChessBoardDialog
+        modalOpen={modalOpen}
+        confirmMove={confirmMove}
+        cancelMove={cancelMove}
+        message={dialogMessage}
+      />
     </>
   );
-}
-
-function PieceRenderer({
-  pieceIdx,
-  boardActive,
-}: {
-  pieceIdx: number | null;
-  boardActive: boolean;
-}) {
-  if (!boardActive) return null;
-  if (pieceIdx === null) return null;
-
-  // white back rank
-  switch (pieceIdx) {
-    case 0:
-    case 7:
-      return <FaChessRook className="text-white" />;
-    case 1:
-    case 6:
-      return <FaChessKnight className="text-white" />;
-    case 2:
-    case 5:
-      return <FaChessBishop className="text-white" />;
-    case 3:
-      return <FaChessQueen className="text-white" />;
-    case 4:
-      return <FaChessKing className="text-white" />;
-  }
-
-  // white pawns
-  if (pieceIdx > 7 && pieceIdx < 16)
-    return <FaChessPawn className="text-white" />;
-
-  // black pawns
-  if (pieceIdx > 15 && pieceIdx < 24)
-    return <FaChessPawn className="text-black" />;
-
-  // black back rank
-  switch (pieceIdx) {
-    case 24:
-    case 31:
-      return <FaChessRook className="text-black" />;
-    case 25:
-    case 30:
-      return <FaChessKnight className="text-black" />;
-    case 26:
-    case 29:
-      return <FaChessBishop className="text-black" />;
-    case 27:
-      return <FaChessQueen className="text-black" />;
-    case 28:
-      return <FaChessKing className="text-black" />;
-  }
-  return null;
 }
