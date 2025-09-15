@@ -6,7 +6,7 @@ import {
   WalletProvider,
 } from "@solana/wallet-adapter-react";
 import { WalletModalProvider } from "@solana/wallet-adapter-react-ui";
-import PdaBoard from "../components/PdaBoard";
+import Table from "../components/Table";
 import { useMemo } from "react";
 
 export default function BoardPage({
@@ -22,7 +22,7 @@ export default function BoardPage({
       <WalletProvider wallets={wallets} autoConnect>
         <WalletModalProvider>
           <div className="flex flex-col items-center gap-2 p-4 flex-2 border-1">
-            <PdaBoard searchParams={searchParams} />
+            <Table searchParams={searchParams} />
           </div>
         </WalletModalProvider>
       </WalletProvider>

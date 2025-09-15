@@ -106,7 +106,7 @@ export async function movePiece(
 }
 
 // --- 4. Resign from game ---
-export async function resignGame(
+export async function resign(
   program: Program<AnchorChess>,
   player: web3.PublicKey,
   board: web3.PublicKey

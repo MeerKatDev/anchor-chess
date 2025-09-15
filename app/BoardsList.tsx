@@ -40,11 +40,7 @@ export default function BoardsList() {
       try {
         const program = getProgram();
         const boardAccounts = await program.account.board.all(); // async RPC call
-        const formatted = boardAccounts.map((b) => ({
-          pubkey: b.publicKey,
-          account: b.account,
-        }));
-        setBoards(formatted);
+        setBoards(boardAccounts);
       } catch (err) {
         console.error("Failed to fetch boards:", err);
       } finally {
@@ -60,7 +56,7 @@ export default function BoardsList() {
 
   return (
     <div className="flex flex-col gap-8 flex-2">
-      {boards.map(({ pubkey, account }) => (
+      {boards.map(({ publicKey: pubkey, account }) => (
         <div key={pubkey.toBase58()} className="border p-4 rounded">
           <p>
             <strong>PDA:</strong>{" "}
