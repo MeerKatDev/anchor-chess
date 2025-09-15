@@ -1,7 +1,6 @@
 import dynamic from "next/dynamic";
 import useAnchorProgram from "./hooks/useAnchorProgram";
-import { useState } from "react";
-import { isMoveValid } from "./native";
+import { ChangeEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import { initializeBoard, joinBoard } from "./instructions";
 import { web3, BN } from "@coral-xyz/anchor";
@@ -14,10 +13,8 @@ const WalletMultiButtonDynamic = dynamic(
 
 export default function MainBoard() {
   const { wallet, getProgram } = useAnchorProgram();
-  const [status, setStatus] = useState<string | null>(null);
+  const [_status, setStatus] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-
-  const [boardPda, setBoardPda] = useState<web3.PublicKey | null>(null);
   const [joinInput, setJoinInput] = useState("");
 
   const canJoinOrLoad = !!wallet.publicKey && !!joinInput;
@@ -32,7 +29,7 @@ export default function MainBoard() {
       const program = getProgram();
       setLoading(true);
       setStatus("Creating board...");
-      const { signature, board, successful } = await initializeBoard(
+      const { board, successful } = await initializeBoard(
         program,
         publicKey,
         new BN(Date.now()),
@@ -70,12 +67,7 @@ export default function MainBoard() {
       console.log("Getting board data from chain..");
       const boardData = await program.account.board.fetch(boardPda);
       console.log("Joining board..");
-      const signature = await joinBoard(
-        program,
-        boardData.maker,
-        publicKey,
-        boardPda
-      );
+      const _ = await joinBoard(program, boardData.maker, publicKey, boardPda);
       setStatus("Joined board ✅");
     } catch (err) {
       console.error(err);
@@ -113,7 +105,7 @@ export default function MainBoard() {
         <input
           type="text"
           value={joinInput}
-          onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+          onChange={(e: ChangeEvent<HTMLInputElement>) =>
             setJoinInput(e.target.value)
           }
           placeholder="Paste board PDA to join"

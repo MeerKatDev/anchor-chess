@@ -1,6 +1,5 @@
 "use client";
 
-import { useSearchParams } from "next/navigation";
 import { PhantomWalletAdapter } from "@solana/wallet-adapter-wallets";
 import {
   ConnectionProvider,

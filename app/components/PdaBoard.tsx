@@ -12,14 +12,21 @@ const WalletMultiButtonDynamic = dynamic(
   { ssr: false }
 );
 
+interface Board {
+  isWhiteTurn: boolean;
+  maker: web3.PublicKey;
+  guest: web3.PublicKey;
+  state: number[];
+}
+
 interface PdaBoardProps {
   searchParams: Promise<{ pda?: string }>;
 }
 
 export default function PdaBoard({ searchParams }: PdaBoardProps) {
   const { wallet, getProgram } = useAnchorProgram();
-  const [boardState, setBoardState] = useState<any>(null);
-  const [loading, setLoading] = useState(false);
+  const [boardState, setBoardState] = useState<Board>(null);
+  const [_loading, setLoading] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
   const params = use(searchParams);
   const pda = params.pda;

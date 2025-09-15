@@ -1,21 +1,35 @@
 import { useState, useEffect } from "react";
 import useAnchorProgram from "./hooks/useAnchorProgram";
-import { PublicKey } from "@solana/web3.js";
+import { web3, BN } from "@coral-xyz/anchor";
 import { useWallet } from "@solana/wallet-adapter-react";
 import Link from "next/link";
 
-function truncateMiddle(str: string, front = 4, back = 4): string {
+function truncateMiddle(
+  str: string,
+  front: number = 4,
+  back: number = 4
+): string {
   if (!str) return "";
   if (str.length <= front + back) return str;
   return `${str.slice(0, front)}...${str.slice(-back)}`;
 }
 
+interface Board {
+  isWhiteTurn: boolean;
+  bump: number;
+  seed: BN;
+  maker: web3.PublicKey;
+  guest: web3.PublicKey;
+  state: number[];
+  gameOver: boolean;
+}
+
 export default function BoardsList() {
   const { getProgram } = useAnchorProgram();
   const wallet = useWallet();
-  const [boards, setBoards] = useState<{ pubkey: PublicKey; account: any }[]>(
-    []
-  );
+  const [boards, setBoards] = useState<
+    { pubkey: web3.PublicKey; account: Board }[]
+  >([]);
   const [loading, setLoading] = useState(false);
   if (!wallet) return; // wait for wallet to connect
   const walletPubkey = wallet.publicKey;

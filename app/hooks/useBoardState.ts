@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { PublicKey } from "@solana/web3.js";
 
 // Mirror of the Rust struct `Board`
